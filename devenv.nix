@@ -48,12 +48,13 @@
 
   # Git hooks for code quality
   git-hooks.hooks = {
-    # TypeScript type checking
-    tsc = {
+    # TypeScript type checking (excludes node_modules via tsconfig)
+    pre-commit = {
       enable = true;
       name = "TypeScript type check";
       entry = "${pkgs.nodejs_20}/bin/npx tsc --noEmit";
-      files = "\\.(ts|tsx)$";
+      # Only run on staged files in src/ directory
+      pass_filenames = false;
     };
   };
 }

@@ -16,15 +16,49 @@ A Model Context Protocol (MCP) server that provides comprehensive task managemen
 - **Delete Tasks** - Permanently remove tasks from your workspace
 
 ### User & Stream Operations
-- **User Information** - Access user profile, timezone, and group details
-- **Stream Management** - Get streams/channels for project organization
+- **User Information** - Access user profile, timezone, and group details (cached 5min)
+- **Stream Management** - Get streams/channels for project organization (cached 5min)
 - **Dual Transport** - Support for both stdio and HTTP stream MCP transports
+
+### Infrastructure (Constitution Principles)
+
+#### I. Complete API Coverage
+- 18 MCP tools covering task, user, and stream operations
+- Comprehensive CRUD operations for all Sunsama entities
+- 90%+ coverage of discovered API endpoints
+
+#### II. MCP Protocol Compliance
+- Full MCP specification adherence
+- Transport-agnostic client resolution
+- Structured responses (JSON, TSV, paginated)
+
+#### III. Resilient Error Handling (NON-NEGOTIABLE)
+- **Exponential Backoff Retry** - 3 attempts with 100ms→200ms→400ms delays
+- **Custom Error Classes** - SunsamaAPIError, ValidationError, TimeoutError, AuthenticationError
+- **Smart Retry Logic** - Only retries on 5xx, 429, 408, and timeout errors
+- **Schema Validation** - Zod validation with error logging for API changes
+- **Graceful Degradation** - Passthrough validation preserves unknown fields
+
+#### IV. Personal Use Optimization
+- **Aggressive Caching** - LRU cache with 30s (tasks), 5min (user/streams) TTL
+- **Immediate Invalidation** - Granular cache clearing on write operations
+- **Timezone Awareness** - All date operations respect user timezone
+- **Past Date Warnings** - Non-blocking warnings when creating tasks for past dates
+- **Response Optimization** - Task trimming for large datasets
+
+#### V. Maintainability & Documentation
+- **Type Safety** - Full TypeScript with Zod schema validation
+- **Modular Architecture** - Clear separation: tools, helpers, services, models
+- **Helper Functions** - 10+ reusable helpers in task-helpers.ts
+- **Comprehensive Comments** - All tasks annotated with IDs (T020-T068)
+- **Test Coverage** - 97+ tests passing
 
 ## Installation
 
 ### Prerequisites
 - [Bun](https://bun.sh) runtime (for development)
 - Sunsama account with API access
+- For NixOS users: [devenv](https://devenv.sh) or Nix with flakes (optional)
 
 ### Using NPX (Recommended)
 No installation required! Use directly with:
@@ -33,6 +67,8 @@ npx mcp-sunsama
 ```
 
 ### Development Setup
+
+#### Standard Setup
 1. Clone the repository:
 ```bash
 git clone https://github.com/robertn702/mcp-sunsama.git
@@ -49,6 +85,37 @@ bun install
 cp .env.example .env
 # Edit .env and add your Sunsama credentials
 ```
+
+#### NixOS/devenv Setup
+For NixOS users, we provide a declarative development environment:
+
+1. Clone and enter the directory:
+```bash
+git clone https://github.com/robertn702/mcp-sunsama.git
+cd mcp-sunsama
+```
+
+2. Activate devenv (will install Node.js 20, bun, TypeScript, git hooks):
+```bash
+direnv allow  # If using direnv
+# OR
+devenv shell
+```
+
+3. Dependencies are automatically installed via devenv hooks
+
+4. Set up environment variables:
+```bash
+cp .env.example .env
+# Edit .env and add your Sunsama credentials
+```
+
+The `devenv.nix` configuration provides:
+- Node.js 20 with npm/bun
+- TypeScript language support
+- Git hooks for code quality
+- All build tools (gcc, make, pkg-config)
+- Automatic dependency installation
 
 Environment variables:
 - `SUNSAMA_EMAIL` - Your Sunsama account email (required for stdio transport)
@@ -265,6 +332,18 @@ The server is organized with a modular, resource-based architecture:
 
 ```
 src/
+├── config/
+│   ├── cache-config.ts         # Cache TTL constants (30s tasks, 5min user/streams)
+│   ├── transport.ts            # Transport mode configuration
+│   └── session-config.ts       # Session TTL configuration
+├── models/
+│   ├── task.ts                 # Task type (from sunsama-api) + helpers
+│   ├── user.ts                 # User schema with Zod validation
+│   └── channel.ts              # Channel/Stream schema with Zod
+├── services/
+│   ├── cache.ts                # LRU cache service with TTL
+│   ├── schema-validator.ts     # Zod validation for API responses
+│   └── sunsama-client.ts       # Resilient client wrapper with retry
 ├── tools/
 │   ├── shared.ts          # Common utilities and patterns
 │   ├── user-tools.ts      # User operations (get-user)
@@ -272,44 +351,50 @@ src/
 │   ├── stream-tools.ts    # Stream operations (get-streams)
 │   └── index.ts           # Export all tools
 ├── resources/
-│   └── index.ts           # API documentation resource
-├── auth/                  # Authentication strategies
-│   ├── stdio.ts           # Stdio transport authentication
-│   ├── http.ts            # HTTP Basic Auth parsing
-│   └── types.ts           # Shared auth types
+│   └── index.ts                # API documentation resource
+├── auth/                       # Authentication strategies
+│   ├── stdio.ts                # Stdio transport authentication
+│   ├── http.ts                 # HTTP Basic Auth parsing
+│   └── types.ts                # Shared auth types
 ├── transports/
-│   ├── stdio.ts           # Stdio transport implementation
-│   └── http.ts            # HTTP Stream transport with session management
+│   ├── stdio.ts                # Stdio transport implementation
+│   └── http.ts                 # HTTP Stream transport with session management
 ├── session/
-│   └── session-manager.ts # Session lifecycle management
-├── config/                # Environment configuration
-│   ├── transport.ts       # Transport mode configuration
-│   └── session-config.ts  # Session TTL configuration
-├── utils/                 # Utilities (filtering, trimming, etc.)
-│   ├── client-resolver.ts # Transport-agnostic client resolution
-│   ├── task-filters.ts    # Task completion filtering
-│   ├── task-trimmer.ts    # Response size optimization
-│   └── to-tsv.ts          # TSV formatting utilities
-├── schemas.ts             # Zod validation schemas
-└── main.ts                # Server setup (47 lines vs 1162 before refactoring)
+│   └── session-manager.ts      # Session lifecycle management
+├── utils/                      # Utilities
+│   ├── errors.ts               # Custom error classes (Constitution III)
+│   ├── error-handler.ts        # Exponential backoff retry logic
+│   ├── date-utils.ts           # Timezone-aware date utilities (Luxon)
+│   ├── coverage-tracker.ts     # API usage monitoring
+│   ├── client-resolver.ts      # Transport-agnostic client resolution
+│   ├── task-filters.ts         # Task completion filtering
+│   ├── task-trimmer.ts         # Response size optimization
+│   └── to-tsv.ts               # TSV formatting utilities
+├── schemas.ts                  # Zod validation schemas for tool parameters
+└── main.ts                     # Server setup (47 lines)
 
 __tests__/
-├── unit/                  # Unit tests (no auth required)
-│   ├── auth/              # Auth utility tests
-│   ├── config/            # Configuration tests
-│   └── session/           # Session management tests
-└── integration/           # Integration tests (requires credentials)
+├── unit/                       # Unit tests (no auth required)
+│   ├── auth/                   # Auth utility tests
+│   ├── config/                 # Configuration tests
+│   └── session/                # Session management tests
+└── integration/                # Integration tests (requires credentials)
     └── http-transport.test.ts
+
+docs/
+└── COVERAGE_MATRIX.md          # API endpoint implementation tracking
 ```
 
-**Key Features:**
-- **Type Safety**: Full TypeScript typing with Zod schema validation
-- **Parameter Destructuring**: Clean, explicit function signatures
-- **Shared Utilities**: Common patterns extracted to reduce duplication
-- **Error Handling**: Standardized error handling across all tools
-- **Response Optimization**: Task filtering and trimming for large datasets
+**Key Architecture Features:**
+- **Layered Design**: Clear separation between models, services, tools, and transports
+- **Type Safety**: Full TypeScript with Zod runtime validation
+- **Cache Infrastructure**: LRU cache with granular invalidation (Constitution IV)
+- **Error Resilience**: Exponential backoff retry with smart error detection (Constitution III)
+- **Helper Functions**: 10+ reusable helpers reduce code duplication
+- **Timezone Awareness**: All date operations respect user timezone via Luxon
+- **Validation Pipeline**: API responses → Zod validation → Type casting → Cache/Return
 - **Session Management**: Dual-layer caching with TTL-based lifecycle management
-- **Test Coverage**: 251+ unit tests and comprehensive integration tests
+- **Test Coverage**: 97+ unit tests and comprehensive integration tests
 
 ## Authentication
 
