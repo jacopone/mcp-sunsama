@@ -418,6 +418,9 @@ export const updateTaskNotesTool = withTransportClient({
       options,
     );
 
+    // Invalidate task cache (bypass cache on write)
+    invalidateTaskCaches(taskId);
+
     return formatJsonResponse({
       success: result.success,
       taskId,
