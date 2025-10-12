@@ -139,6 +139,40 @@ export async function getCachedTaskById(
 }
 
 /**
+ * Get backlog tasks with caching (30s TTL)
+ * T029: get-tasks-backlog with cache integration
+ */
+export async function getCachedTasksBacklog(
+  context: ToolContext
+): Promise<Task[]> {
+  const cacheKey = CacheKeys.TASKS_BACKLOG;
+
+  // Try cache first
+  const cached = cache.get<Task[]>(cacheKey);
+  if (cached) {
+    console.error('[TaskHelpers] Backlog cache HIT');
+    return cached;
+  }
+
+  console.error('[TaskHelpers] Backlog cache MISS - fetching from API');
+
+  // Fetch from API
+  const tasksData = await context.client.getTasksBacklog();
+
+  // Validate response
+  const validation = validateTaskArrayResponse(tasksData);
+  if (!validation.success) {
+    logValidationError('GET /tasks/backlog', tasksData, validation.errors || []);
+    throw new Error(`Tasks schema validation failed: ${validation.errors?.join(', ')}`);
+  }
+
+  // Cache for 30 seconds
+  cache.set(cacheKey, validation.data!, CacheConfig.TASK_TTL);
+
+  return validation.data!;
+}
+
+/**
  * Check if date is in the past and return warning message
  * FR-010: Past date warning
  */

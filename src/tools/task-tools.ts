@@ -51,6 +51,7 @@ import {
 import {
   getCachedTasksByDay,
   getCachedTaskById,
+  getCachedTasksBacklog,
   getUserTimezone,
   checkPastDateWarning,
   invalidateTaskCaches,
@@ -66,7 +67,8 @@ export const getTasksBacklogTool = withTransportClient({
   description: "Get tasks from the backlog",
   parameters: getTasksBacklogSchema,
   execute: async (_args: GetTasksBacklogInput, context: ToolContext) => {
-    const tasks = await context.client.getTasksBacklog();
+    // T029: Cache integration (30s TTL) + validation
+    const tasks = await getCachedTasksBacklog(context);
     const trimmedTasks = trimTasksForResponse(tasks);
 
     return formatTsvResponse(trimmedTasks);
