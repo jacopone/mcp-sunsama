@@ -24,11 +24,11 @@ lifecycle: ephemeral
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Clone/fork robertn702/mcp-sunsama repository to local development environment
-- [ ] T002 Install project dependencies using `npm install` or `bun install` per package.json
-- [ ] T003 [P] Verify existing test suite passes with `bun test` to establish baseline
-- [ ] T004 [P] Create feature branch `001-complete-sunsama-api` from main/master
-- [ ] T005 [P] Set up credential storage using setup CLI: verify keytar/keychain integration works on development machine
+- [X] T001 Clone/fork robertn702/mcp-sunsama repository to local development environment
+- [X] T002 Install project dependencies using `npm install` or `bun install` per package.json
+- [X] T003 [P] Verify existing test suite passes with `bun test` to establish baseline
+- [X] T004 [P] Create feature branch `001-complete-sunsama-api` from main/master
+- [X] T005 [P] Set up credential storage using setup CLI: verify keytar/keychain integration works on development machine
 
 **Checkpoint**: Development environment configured, existing tests passing, credentials stored securely
 
@@ -41,28 +41,28 @@ lifecycle: ephemeral
 **CRITICAL**: No user story work can begin until this phase is complete
 
 ### Cache Infrastructure
-- [ ] T006 Create `/home/guyfawkes/sunsama-mcp/src/services/cache.ts` implementing LRU cache with 30-second TTL using lru-cache library (install dependency)
-- [ ] T007 [P] Add cache configuration to `/home/guyfawkes/sunsama-mcp/src/config/` with TTL constants per data type (tasks: 30s, user: 5min, streams: 5min)
-- [ ] T008 [P] Implement cache invalidation helpers in `/home/guyfawkes/sunsama-mcp/src/services/cache.ts`: clearTaskCache(taskId), clearDayCache(date), clearBacklogCache()
+- [X] T006 Create `/home/guyfawkes/sunsama-mcp/src/services/cache.ts` implementing LRU cache with 30-second TTL using lru-cache library (install dependency)
+- [X] T007 [P] Add cache configuration to `/home/guyfawkes/sunsama-mcp/src/config/` with TTL constants per data type (tasks: 30s, user: 5min, streams: 5min)
+- [X] T008 [P] Implement cache invalidation helpers in `/home/guyfawkes/sunsama-mcp/src/services/cache.ts`: clearTaskCache(taskId), clearDayCache(date), clearBacklogCache()
 
 ### Schema Validation
-- [ ] T009 Create `/home/guyfawkes/sunsama-mcp/src/models/task.ts` with Zod schemas from data-model.md: TaskSchema, TaskUpdateSchema, TaskCreateSchema
-- [ ] T010 [P] Create `/home/guyfawkes/sunsama-mcp/src/models/user.ts` with UserSchema from data-model.md
-- [ ] T011 [P] Create `/home/guyfawkes/sunsama-mcp/src/models/channel.ts` with ChannelSchema from data-model.md
-- [ ] T012 Create `/home/guyfawkes/sunsama-mcp/src/services/schema-validator.ts` with validateTaskResponse(), validateUserResponse(), validateChannelResponse() functions using Zod
+- [X] T009 Create `/home/guyfawkes/sunsama-mcp/src/models/task.ts` with Zod schemas from data-model.md: TaskSchema, TaskUpdateSchema, TaskCreateSchema
+- [X] T010 [P] Create `/home/guyfawkes/sunsama-mcp/src/models/user.ts` with UserSchema from data-model.md
+- [X] T011 [P] Create `/home/guyfawkes/sunsama-mcp/src/models/channel.ts` with ChannelSchema from data-model.md
+- [X] T012 Create `/home/guyfawkes/sunsama-mcp/src/services/schema-validator.ts` with validateTaskResponse(), validateUserResponse(), validateChannelResponse() functions using Zod
 
 ### Error Handling & Resilience
-- [ ] T013 Create `/home/guyfawkes/sunsama-mcp/src/utils/error-handler.ts` implementing exponential backoff retry logic (3 attempts, 100ms/200ms/400ms delays)
-- [ ] T014 [P] Create custom error classes in `/home/guyfawkes/sunsama-mcp/src/utils/errors.ts`: SunsamaAPIError, ValidationError, AuthenticationError with MCP error codes
-- [ ] T015 Extend `/home/guyfawkes/sunsama-mcp/src/services/sunsama-client.ts` to wrap all API calls with retry logic and error handling from T013
+- [X] T013 Create `/home/guyfawkes/sunsama-mcp/src/utils/error-handler.ts` implementing exponential backoff retry logic (3 attempts, 100ms/200ms/400ms delays)
+- [X] T014 [P] Create custom error classes in `/home/guyfawkes/sunsama-mcp/src/utils/errors.ts`: SunsamaAPIError, ValidationError, AuthenticationError with MCP error codes
+- [X] T015 Extend `/home/guyfawkes/sunsama-mcp/src/services/sunsama-client.ts` to wrap all API calls with retry logic and error handling from T013
 
 ### Timezone Handling
-- [ ] T016 Create `/home/guyfawkes/sunsama-mcp/src/utils/date-utils.ts` with timezone-aware date parsing/formatting functions using luxon or date-fns-tz library
-- [ ] T017 [P] Add parseDate(dateString, timezone), formatDate(date, timezone), getCurrentDate(timezone) helper functions
+- [X] T016 Create `/home/guyfawkes/sunsama-mcp/src/utils/date-utils.ts` with timezone-aware date parsing/formatting functions using luxon or date-fns-tz library
+- [X] T017 [P] Add parseDate(dateString, timezone), formatDate(date, timezone), getCurrentDate(timezone) helper functions
 
 ### Coverage Tracking Infrastructure
-- [ ] T018 Create `/home/guyfawkes/sunsama-mcp/src/utils/coverage-tracker.ts` implementing API monitoring: recordRequest(), getStats(), detectSchemaChanges()
-- [ ] T019 [P] Create `/home/guyfawkes/sunsama-mcp/docs/COVERAGE_MATRIX.md` as markdown version of contracts/coverage-matrix.json with initial endpoint status
+- [X] T018 Create `/home/guyfawkes/sunsama-mcp/src/utils/coverage-tracker.ts` implementing API monitoring: recordRequest(), getStats(), detectSchemaChanges()
+- [X] T019 [P] Create `/home/guyfawkes/sunsama-mcp/docs/COVERAGE_MATRIX.md` as markdown version of contracts/coverage-matrix.json with initial endpoint status
 
 **Checkpoint**: Foundation ready - cache, validation, error handling, timezone support, and coverage tracking all operational
 
@@ -76,17 +76,17 @@ lifecycle: ephemeral
 
 ### Implementation for User Story 1
 
-- [ ] T020 [P] [US1] Update get-tasks-by-day tool in `/home/guyfawkes/sunsama-mcp/src/tools/tasks.ts`: add cache integration (read from cache, 30s TTL), timezone-aware date parsing
-- [ ] T021 [P] [US1] Update get-task-by-id tool in `/home/guyfawkes/sunsama-mcp/src/tools/tasks.ts`: add cache integration, Zod validation of response using TaskSchema
-- [ ] T022 [US1] Update create-task tool in `/home/guyfawkes/sunsama-mcp/src/tools/tasks.ts`: add past date warning (FR-010), bypass cache on write, invalidate day cache after creation
-- [ ] T023 [US1] Update update-task-complete tool in `/home/guyfawkes/sunsama-mcp/src/tools/tasks.ts`: set completedAt timestamp, bypass cache, invalidate task and day caches
-- [ ] T024 [US1] Update update-task-scheduled-date tool in `/home/guyfawkes/sunsama-mcp/src/tools/tasks.ts`: handle null (move to backlog per FR-014), past date warning, invalidate old and new day caches
-- [ ] T025 [US1] Update update-task-text tool in `/home/guyfawkes/sunsama-mcp/src/tools/tasks.ts`: validate text length (1-500 chars per FR-015), bypass cache, invalidate task cache
-- [ ] T026 [US1] Update delete-task tool in `/home/guyfawkes/sunsama-mcp/src/tools/tasks.ts`: add confirmation parameter check (FR-021), return task metadata for client confirmation, invalidate all related caches
+- [X] T020 [P] [US1] Update get-tasks-by-day tool in `/home/guyfawkes/sunsama-mcp/src/tools/tasks.ts`: add cache integration (read from cache, 30s TTL), timezone-aware date parsing
+- [X] T021 [P] [US1] Update get-task-by-id tool in `/home/guyfawkes/sunsama-mcp/src/tools/tasks.ts`: add cache integration, Zod validation of response using TaskSchema
+- [X] T022 [US1] Update create-task tool in `/home/guyfawkes/sunsama-mcp/src/tools/tasks.ts`: add past date warning (FR-010), bypass cache on write, invalidate day cache after creation
+- [X] T023 [US1] Update update-task-complete tool in `/home/guyfawkes/sunsama-mcp/src/tools/tasks.ts`: set completedAt timestamp, bypass cache, invalidate task and day caches
+- [X] T024 [US1] Update update-task-scheduled-date tool in `/home/guyfawkes/sunsama-mcp/src/tools/tasks.ts`: handle null (move to backlog per FR-014), past date warning, invalidate old and new day caches
+- [X] T025 [US1] Update update-task-text tool in `/home/guyfawkes/sunsama-mcp/src/tools/tasks.ts`: validate text length (1-500 chars per FR-015), bypass cache, invalidate task cache
+- [X] T026 [US1] Update delete-task tool in `/home/guyfawkes/sunsama-mcp/src/tools/tasks.ts`: add confirmation parameter check (FR-021), return task metadata for client confirmation, invalidate all related caches
 
 ### User and Timezone Support
-- [ ] T027 [US1] Update get-user tool in `/home/guyfawkes/sunsama-mcp/src/tools/user.ts`: add cache integration (5min TTL), validate response with UserSchema, expose timezone field
-- [ ] T028 [US1] Integrate user timezone into all date operations: modify task tools to fetch user timezone and pass to date-utils functions
+- [X] T027 [US1] Update get-user tool in `/home/guyfawkes/sunsama-mcp/src/tools/user.ts`: add cache integration (5min TTL), validate response with UserSchema, expose timezone field
+- [X] T028 [US1] Integrate user timezone into all date operations: modify task tools to fetch user timezone and pass to date-utils functions
 
 **Checkpoint**: User Story 1 complete - daily planning workflow fully functional with caching, error handling, and timezone support
 
@@ -100,10 +100,10 @@ lifecycle: ephemeral
 
 ### Implementation for User Story 2
 
-- [ ] T029 [P] [US2] Update get-tasks-backlog tool in `/home/guyfawkes/sunsama-mcp/src/tools/backlog.ts` (or extend tasks.ts): add pagination support (limit/offset per FR-005), cache integration (30s TTL), validate with TaskSchema array
-- [ ] T030 [US2] Enhance create-task tool: when scheduledDate is null, task goes to backlog (FR-008), invalidate backlog cache on creation
-- [ ] T031 [US2] Enhance update-task-scheduled-date tool: moving to backlog (scheduledDate=null) invalidates backlog cache (FR-014)
-- [ ] T032 [P] [US2] Implement update-task-snooze tool in `/home/guyfawkes/sunsama-mcp/src/tools/tasks.ts`: add snoozeDate field support (nullable), validate future date, invalidate task and day caches
+- [X] T029 [P] [US2] Update get-tasks-backlog tool in `/home/guyfawkes/sunsama-mcp/src/tools/backlog.ts` (or extend tasks.ts): add pagination support (limit/offset per FR-005), cache integration (30s TTL), validate with TaskSchema array
+- [X] T030 [US2] Enhance create-task tool: when scheduledDate is null, task goes to backlog (FR-008), invalidate backlog cache on creation
+- [X] T031 [US2] Enhance update-task-scheduled-date tool: moving to backlog (scheduledDate=null) invalidates backlog cache (FR-014)
+- [X] T032 [P] [US2] Implement update-task-snooze tool in `/home/guyfawkes/sunsama-mcp/src/tools/tasks.ts`: add snoozeDate field support (nullable), validate future date, invalidate task and day caches
 
 **Checkpoint**: User Story 2 complete - backlog management fully functional, can be tested independently of US1
 
@@ -117,9 +117,9 @@ lifecycle: ephemeral
 
 ### Implementation for User Story 3
 
-- [ ] T033 [P] [US3] Implement update-task-time-estimate tool in `/home/guyfawkes/sunsama-mcp/src/tools/timeboxing.ts` (or extend tasks.ts): validate plannedTime range (0-1440 minutes per FR-017), support null to clear estimate, bypass cache and invalidate
-- [ ] T034 [US3] Enhance create-task tool: add plannedTime parameter validation (0-1440 minutes), include in task creation request
-- [ ] T035 [US3] Enhance task retrieval tools (get-tasks-by-day, get-task-by-id, get-tasks-backlog): ensure plannedTime and actualTime fields are included in response schema
+- [X] T033 [P] [US3] Implement update-task-time-estimate tool in `/home/guyfawkes/sunsama-mcp/src/tools/timeboxing.ts` (or extend tasks.ts): validate plannedTime range (0-1440 minutes per FR-017), support null to clear estimate, bypass cache and invalidate
+- [X] T034 [US3] Enhance create-task tool: add plannedTime parameter validation (0-1440 minutes), include in task creation request
+- [X] T035 [US3] Enhance task retrieval tools (get-tasks-by-day, get-task-by-id, get-tasks-backlog): ensure plannedTime and actualTime fields are included in response schema
 
 **Checkpoint**: User Story 3 complete - time estimation fully functional, can be tested independently
 
@@ -133,10 +133,10 @@ lifecycle: ephemeral
 
 ### Implementation for User Story 4
 
-- [ ] T036 [P] [US4] Implement update-task-notes tool in `/home/guyfawkes/sunsama-mcp/src/tools/notes.ts` (or extend tasks.ts): add operation parameter (append/replace per FR-016), validate notes length (max 10000 chars), implement intelligent merge logic
-- [ ] T037 [US4] ~~Implement intelligent note merging in `/home/guyfawkes/sunsama-mcp/src/services/note-merger.ts`~~ *REMOVED: Note merge logic simplified - the `update-task-notes` tool passes content directly to Sunsama API. AI clients handle merge logic when interpreting user intent.*
-- [ ] T038 [US4] Enhance create-task tool: add notes parameter support, validate max length
-- [ ] T039 [US4] Enhance task retrieval tools: ensure notes field is included in all task responses
+- [X] T036 [P] [US4] Implement update-task-notes tool in `/home/guyfawkes/sunsama-mcp/src/tools/notes.ts` (or extend tasks.ts): add operation parameter (append/replace per FR-016), validate notes length (max 10000 chars), implement intelligent merge logic
+- [X] T037 [US4] ~~Implement intelligent note merging in `/home/guyfawkes/sunsama-mcp/src/services/note-merger.ts`~~ *REMOVED: Note merge logic simplified - the `update-task-notes` tool passes content directly to Sunsama API. AI clients handle merge logic when interpreting user intent.*
+- [X] T038 [US4] Enhance create-task tool: add notes parameter support, validate max length
+- [X] T039 [US4] Enhance task retrieval tools: ensure notes field is included in all task responses
 
 **Checkpoint**: User Story 4 complete - notes management fully functional with intelligent merge behavior
 
@@ -150,11 +150,11 @@ lifecycle: ephemeral
 
 ### Implementation for User Story 5
 
-- [ ] T040 [P] [US5] Update get-streams tool in `/home/guyfawkes/sunsama-mcp/src/tools/stream-tools.ts`: add cache integration (5min TTL), validate response with ChannelSchema array, implement proper error handling
-- [ ] T041 [P] [US5] Create get-channels tool as alias in `/home/guyfawkes/sunsama-mcp/src/tools/stream-tools.ts`: same implementation as get-streams for improved discoverability (per user-tools.json). Note: Enhances T040, not a blocking dependency - can be implemented anytime after T040 completes.
-- [ ] T042 [US5] Implement update-task-channel tool in `/home/guyfawkes/sunsama-mcp/src/tools/tasks.ts`: add streamId parameter (nullable per FR-018), validate stream exists, invalidate stream and task caches
-- [ ] T043 [US5] Enhance create-task tool: add streamId parameter support, validate stream exists before creating
-- [ ] T044 [US5] Enhance task retrieval tools: ensure streamId and streamName fields are included in all task responses
+- [X] T040 [P] [US5] Update get-streams tool in `/home/guyfawkes/sunsama-mcp/src/tools/stream-tools.ts`: add cache integration (5min TTL), validate response with ChannelSchema array, implement proper error handling
+- [X] T041 [P] [US5] Create get-channels tool as alias in `/home/guyfawkes/sunsama-mcp/src/tools/stream-tools.ts`: same implementation as get-streams for improved discoverability (per user-tools.json). Note: Enhances T040, not a blocking dependency - can be implemented anytime after T040 completes.
+- [X] T042 [US5] Implement update-task-channel tool in `/home/guyfawkes/sunsama-mcp/src/tools/tasks.ts`: add streamId parameter (nullable per FR-018), validate stream exists, invalidate stream and task caches
+- [X] T043 [US5] Enhance create-task tool: add streamId parameter support, validate stream exists before creating
+- [X] T044 [US5] Enhance task retrieval tools: ensure streamId and streamName fields are included in all task responses
 
 **Checkpoint**: User Story 5 complete - channel organization fully functional
 
@@ -168,9 +168,9 @@ lifecycle: ephemeral
 
 ### Implementation for User Story 6
 
-- [ ] T045 [P] [US6] Update get-archived-tasks tool in `/home/guyfawkes/sunsama-mcp/src/tools/archive.ts` (or extend tasks.ts): add date range filtering (startDate/endDate per FR-003), pagination support (limit/offset per FR-005), cache integration (10min TTL for historical data)
-- [ ] T046 [US6] Add date range validation in `/home/guyfawkes/sunsama-mcp/src/utils/date-utils.ts`: validateDateRange(startDate, endDate) ensures start <= end, reasonable range (max 1 year)
-- [ ] T047 [US6] Enhance archived tasks retrieval: ensure completedAt, archived fields are properly populated in response schema
+- [X] T045 [P] [US6] Update get-archived-tasks tool in `/home/guyfawkes/sunsama-mcp/src/tools/archive.ts` (or extend tasks.ts): add date range filtering (startDate/endDate per FR-003), pagination support (limit/offset per FR-005), cache integration (10min TTL for historical data)
+- [X] T046 [US6] Add date range validation in `/home/guyfawkes/sunsama-mcp/src/utils/date-utils.ts`: validateDateRange(startDate, endDate) ensures start <= end, reasonable range (max 1 year)
+- [X] T047 [US6] Enhance archived tasks retrieval: ensure completedAt, archived fields are properly populated in response schema
 
 **Checkpoint**: User Story 6 complete - archived task history fully accessible
 
@@ -181,42 +181,42 @@ lifecycle: ephemeral
 **Purpose**: Improvements that affect multiple user stories, documentation, and quality assurance
 
 ### Documentation
-- [ ] T048 [P] Create `/home/guyfawkes/sunsama-mcp/docs/API_DISCOVERY.md` documenting API discovery process via browser DevTools per research.md
+- [X] T048 [P] Create `/home/guyfawkes/sunsama-mcp/docs/API_DISCOVERY.md` documenting API discovery process via browser DevTools per research.md
 - [ ] T049 [P] Create `/home/guyfawkes/sunsama-mcp/docs/endpoints/` directory with markdown files per endpoint: get-tasks-by-day.md, create-task.md, etc. (example requests/responses)
-- [ ] T050 [P] Update `/home/guyfawkes/sunsama-mcp/README.md` with setup instructions, credential management via setup CLI, MCP client configuration examples
+- [X] T050 [P] Update `/home/guyfawkes/sunsama-mcp/README.md` with setup instructions, credential management via setup CLI, MCP client configuration examples
 - [ ] T051 [P] Create `/home/guyfawkes/sunsama-mcp/docs/QUICKSTART.md` from quickstart template: installation, setup, basic usage examples per plan.md Phase 1 output
 
 ### Error Handling Enhancement
-- [ ] T052 [P] Add comprehensive error messages with actionable guidance across all tools (per FR-030): map API error codes to user-friendly messages
-- [ ] T053 [P] Implement API version detection in `/home/guyfawkes/sunsama-mcp/src/services/sunsama-client.ts`: log version mismatches, detect schema changes per research.md best practices
+- [X] T052 [P] Add comprehensive error messages with actionable guidance across all tools (per FR-030): map API error codes to user-friendly messages
+- [X] T053 [P] Implement API version detection in `/home/guyfawkes/sunsama-mcp/src/services/sunsama-client.ts`: log version mismatches, detect schema changes per research.md best practices
 
 ### Coverage Tracking & Monitoring
-- [ ] T054 Update `/home/guyfawkes/sunsama-mcp/docs/COVERAGE_MATRIX.md`: mark all implemented tools as "implemented", update implementedDate, testedDate fields
-- [ ] T055 [P] Implement coverage statistics in `/home/guyfawkes/sunsama-mcp/src/utils/coverage-tracker.ts`: calculateCoveragePercentage(), generateSummaryReport()
-- [ ] T056 Add logging for API monitoring: instrument all API calls to track success/failure rates, detect endpoint changes
+- [X] T054 Update `/home/guyfawkes/sunsama-mcp/docs/COVERAGE_MATRIX.md`: mark all implemented tools as "implemented", update implementedDate, testedDate fields
+- [X] T055 [P] Implement coverage statistics in `/home/guyfawkes/sunsama-mcp/src/utils/coverage-tracker.ts`: calculateCoveragePercentage(), generateSummaryReport()
+- [X] T056 Add logging for API monitoring: instrument all API calls to track success/failure rates, detect endpoint changes
 
 ### Security Hardening
-- [ ] T057 [P] Audit all logging statements: ensure no credentials or sensitive data are logged (per FR-041, research.md security best practices)
-- [ ] T058 [P] Add credential validation in setup CLI: test credentials against Sunsama API before storing in keychain
-- [ ] T059 Ensure all API communication uses HTTPS exclusively (per FR-039): verify sunsama-client.ts configuration
+- [X] T057 [P] Audit all logging statements: ensure no credentials or sensitive data are logged (per FR-041, research.md security best practices)
+- [X] T058 [P] Add credential validation in setup CLI: test credentials against Sunsama API before storing in keychain
+- [X] T059 Ensure all API communication uses HTTPS exclusively (per FR-039): verify sunsama-client.ts configuration
 
 ### Performance Optimization
-- [ ] T060 [P] Add cache hit/miss metrics in `/home/guyfawkes/sunsama-mcp/src/services/cache.ts`: track performance, log cache effectiveness
-- [ ] T061 Optimize cache keys in `/home/guyfawkes/sunsama-mcp/src/services/cache.ts`: ensure efficient invalidation patterns, minimize over-invalidation
+- [X] T060 [P] Add cache hit/miss metrics in `/home/guyfawkes/sunsama-mcp/src/services/cache.ts`: track performance, log cache effectiveness
+- [X] T061 Optimize cache keys in `/home/guyfawkes/sunsama-mcp/src/services/cache.ts`: ensure efficient invalidation patterns, minimize over-invalidation
 
 ### Code Quality
-- [ ] T062 [P] Run linter and formatter across all modified files: ensure code style consistency with existing codebase
-- [ ] T063 [P] Add JSDoc comments to all new functions: document parameters, return types, error conditions
-- [ ] T064 [P] Review all Zod schemas: ensure error messages are clear and actionable
+- [X] T062 [P] Run linter and formatter across all modified files: ensure code style consistency with existing codebase
+- [X] T063 [P] Add JSDoc comments to all new functions: document parameters, return types, error conditions
+- [X] T064 [P] Review all Zod schemas: ensure error messages are clear and actionable
 - [ ] T069 [P] Validate MCP protocol compliance: test server with `@modelcontextprotocol/inspector` or manual MCP client verification, ensure JSON Schema generation from Zod works correctly, verify error codes match MCP standard (-32600, -32603, etc.)
 - [ ] T070 [P] Performance testing: validate response times meet success criteria (SC-003: <2s cached, SC-004: <5s fresh, SC-005: <3s create/update, SC-006: <3s startup), measure cache hit rates with T060 metrics, test with realistic workload (100-200 tasks)
 - [ ] T071 [P] Security audit: verify all API communication uses HTTPS (SC-014), confirm zero credential leaks in logs including error conditions (SC-015, FR-041), test environment variable credential handling for stdio transport, validate HTTP Basic Auth parsing for HTTP transport, ensure no plaintext credential storage
 
 ### Validation & Testing
-- [ ] T065 Manual integration testing: test each user story's acceptance scenarios from spec.md against live Sunsama account
+- [X] T065 Manual integration testing: test each user story's acceptance scenarios from spec.md against live Sunsama account
 - [ ] T066 Verify quickstart.md instructions: follow setup steps from scratch, ensure all commands work
-- [ ] T067 Test MCP server with Claude Desktop: verify all tools are discoverable and functional
-- [ ] T068 Test edge cases: timezone boundaries, past date warnings, cache invalidation, error recovery with retry logic
+- [X] T067 Test MCP server with Claude Desktop: verify all tools are discoverable and functional
+- [X] T068 Test edge cases: timezone boundaries, past date warnings, cache invalidation, error recovery with retry logic
 
 **Checkpoint**: All polish tasks complete - project ready for production use
 
