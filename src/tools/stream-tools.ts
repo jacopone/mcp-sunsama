@@ -1,5 +1,6 @@
 import { type GetStreamsInput, getStreamsSchema } from "../schemas.js";
 import { formatTsvResponse, withTransportClient, type ToolContext } from "./shared.js";
+import { getCachedStreams } from "./task-helpers.js";
 
 export const getStreamsTool = withTransportClient({
   name: "get-streams",
@@ -7,7 +8,8 @@ export const getStreamsTool = withTransportClient({
     "Get streams for the user's group (streams are called 'channels' in the Sunsama UI)",
   parameters: getStreamsSchema,
   execute: async (_args: GetStreamsInput, context: ToolContext) => {
-    const streams = await context.client.getStreamsByGroupId();
+    // T040: Cache integration (5min TTL) + validation
+    const streams = await getCachedStreams(context);
 
     return formatTsvResponse(streams);
   },

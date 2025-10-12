@@ -9,6 +9,7 @@ import {
   validateTaskResponse,
   validateTaskArrayResponse,
   validateUserResponse,
+  validateChannelArrayResponse,
   logValidationError,
   type ValidationResult
 } from '../services/schema-validator.js';
@@ -21,6 +22,7 @@ import {
 import type { Task } from '../models/task.js';
 import { getTaskScheduledDate } from '../models/task.js';
 import type { User } from '../models/user.js';
+import type { Channel } from '../models/channel.js';
 import type { ToolContext } from './shared.js';
 
 /**
@@ -168,6 +170,40 @@ export async function getCachedTasksBacklog(
 
   // Cache for 30 seconds
   cache.set(cacheKey, validation.data!, CacheConfig.TASK_TTL);
+
+  return validation.data!;
+}
+
+/**
+ * Get streams/channels with caching (5min TTL)
+ * T040: get-streams with cache integration
+ */
+export async function getCachedStreams(
+  context: ToolContext
+): Promise<Channel[]> {
+  const cacheKey = CacheKeys.STREAMS;
+
+  // Try cache first
+  const cached = cache.get<Channel[]>(cacheKey);
+  if (cached) {
+    console.error('[TaskHelpers] Streams cache HIT');
+    return cached;
+  }
+
+  console.error('[TaskHelpers] Streams cache MISS - fetching from API');
+
+  // Fetch from API
+  const streamsData = await context.client.getStreamsByGroupId();
+
+  // Validate response
+  const validation = validateChannelArrayResponse(streamsData);
+  if (!validation.success) {
+    logValidationError('GET /streams', streamsData, validation.errors || []);
+    throw new Error(`Streams schema validation failed: ${validation.errors?.join(', ')}`);
+  }
+
+  // Cache for 5 minutes
+  cache.set(cacheKey, validation.data!, CacheConfig.STREAM_TTL);
 
   return validation.data!;
 }

@@ -503,11 +503,15 @@ export const updateTaskStreamTool = withTransportClient({
     { taskId, streamId, limitResponsePayload }: UpdateTaskStreamInput,
     context: ToolContext,
   ) => {
+    // T041: Add cache invalidation
     const result = await context.client.updateTaskStream(
       taskId,
       streamId,
       limitResponsePayload !== undefined ? limitResponsePayload : true,
     );
+
+    // Invalidate task cache (bypass cache on write)
+    invalidateTaskCaches(taskId);
 
     return formatJsonResponse({
       success: result.success,
