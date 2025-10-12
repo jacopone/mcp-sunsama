@@ -134,7 +134,7 @@ lifecycle: ephemeral
 ### Implementation for User Story 4
 
 - [ ] T036 [P] [US4] Implement update-task-notes tool in `/home/guyfawkes/sunsama-mcp/src/tools/notes.ts` (or extend tasks.ts): add operation parameter (append/replace per FR-016), validate notes length (max 10000 chars), implement intelligent merge logic
-- [ ] T037 [US4] Implement intelligent note merging in `/home/guyfawkes/sunsama-mcp/src/services/note-merger.ts`: appendNotes(existing, new) adds with "\n" separator, replaceNotes(existing, new) overwrites
+- [ ] T037 [US4] ~~Implement intelligent note merging in `/home/guyfawkes/sunsama-mcp/src/services/note-merger.ts`~~ *REMOVED: Note merge logic simplified - the `update-task-notes` tool passes content directly to Sunsama API. AI clients handle merge logic when interpreting user intent.*
 - [ ] T038 [US4] Enhance create-task tool: add notes parameter support, validate max length
 - [ ] T039 [US4] Enhance task retrieval tools: ensure notes field is included in all task responses
 
@@ -151,7 +151,7 @@ lifecycle: ephemeral
 ### Implementation for User Story 5
 
 - [ ] T040 [P] [US5] Update get-streams tool in `/home/guyfawkes/sunsama-mcp/src/tools/stream-tools.ts`: add cache integration (5min TTL), validate response with ChannelSchema array, implement proper error handling
-- [ ] T041 [P] [US5] Create get-channels tool as alias in `/home/guyfawkes/sunsama-mcp/src/tools/stream-tools.ts`: same implementation as get-streams for improved discoverability (per user-tools.json)
+- [ ] T041 [P] [US5] Create get-channels tool as alias in `/home/guyfawkes/sunsama-mcp/src/tools/stream-tools.ts`: same implementation as get-streams for improved discoverability (per user-tools.json). Note: Enhances T040, not a blocking dependency - can be implemented anytime after T040 completes.
 - [ ] T042 [US5] Implement update-task-channel tool in `/home/guyfawkes/sunsama-mcp/src/tools/tasks.ts`: add streamId parameter (nullable per FR-018), validate stream exists, invalidate stream and task caches
 - [ ] T043 [US5] Enhance create-task tool: add streamId parameter support, validate stream exists before creating
 - [ ] T044 [US5] Enhance task retrieval tools: ensure streamId and streamName fields are included in all task responses
@@ -208,6 +208,9 @@ lifecycle: ephemeral
 - [ ] T062 [P] Run linter and formatter across all modified files: ensure code style consistency with existing codebase
 - [ ] T063 [P] Add JSDoc comments to all new functions: document parameters, return types, error conditions
 - [ ] T064 [P] Review all Zod schemas: ensure error messages are clear and actionable
+- [ ] T069 [P] Validate MCP protocol compliance: test server with `@modelcontextprotocol/inspector` or manual MCP client verification, ensure JSON Schema generation from Zod works correctly, verify error codes match MCP standard (-32600, -32603, etc.)
+- [ ] T070 [P] Performance testing: validate response times meet success criteria (SC-003: <2s cached, SC-004: <5s fresh, SC-005: <3s create/update, SC-006: <3s startup), measure cache hit rates with T060 metrics, test with realistic workload (100-200 tasks)
+- [ ] T071 [P] Security audit: verify all API communication uses HTTPS (SC-014), confirm zero credential leaks in logs including error conditions (SC-015, FR-041), test environment variable credential handling for stdio transport, validate HTTP Basic Auth parsing for HTTP transport, ensure no plaintext credential storage
 
 ### Validation & Testing
 - [ ] T065 Manual integration testing: test each user story's acceptance scenarios from spec.md against live Sunsama account
@@ -412,9 +415,9 @@ Task T028: Integrate user timezone (after T027, requires all tools updated)
 - **Phase 6 (US4 - P3)**: 4 tasks (~4 hours)
 - **Phase 7 (US5 - P3)**: 5 tasks (~5 hours)
 - **Phase 8 (US6 - P3)**: 3 tasks (~3 hours)
-- **Phase 9 (Polish)**: 21 tasks (~8 hours)
+- **Phase 9 (Polish)**: 24 tasks (~10 hours)
 
-**Total**: 68 tasks, ~42 hours sequential, ~20 hours with optimal parallelization (5 developers)
+**Total**: 71 tasks, ~44 hours sequential, ~22 hours with optimal parallelization (5 developers)
 
 ---
 
@@ -475,5 +478,5 @@ All 41 functional requirements from spec.md are covered across tasks.
 
 **Document Status**: Active
 **Last Updated**: 2025-10-12
-**Total Estimated Effort**: 42 hours (sequential), 20 hours (parallelized)
+**Total Estimated Effort**: 44 hours (sequential), 22 hours (parallelized)
 **MVP Effort**: 19 hours (US1 only + foundation)

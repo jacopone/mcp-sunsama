@@ -3,7 +3,7 @@
 **Branch**: `001-complete-sunsama-api` | **Date**: 2025-10-12 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/001-complete-sunsama-api/spec.md`
 
-**Note**: This plan extends robertn702/mcp-sunsama to achieve comprehensive Sunsama API coverage for personal use.
+**Note**: This is a standalone MCP server implementation leveraging the robertn702/sunsama-api TypeScript library for API access. Architecture evolved from initial "extend robertn702/mcp-sunsama" concept to a clean consolidated implementation.
 
 ## Summary
 
@@ -15,9 +15,11 @@ Extend the existing robertn702/mcp-sunsama MCP server to provide complete covera
 **Primary Dependencies**:
 - `@modelcontextprotocol/sdk` - MCP protocol implementation
 - `zod` - Runtime schema validation
-- `robertn702/sunsama-api` - Existing TypeScript wrapper for Sunsama API
-- `node-fetch` or `axios` - HTTP client for API requests
-- `keytar` or `@atom/keytar` - Secure credential storage in system keychain
+- `sunsama-api` (robertn702/sunsama-api) - TypeScript wrapper for Sunsama API with built-in authentication
+- `lru-cache` - LRU cache implementation with TTL support
+- `luxon` - Timezone-aware date handling
+
+**Authentication**: Uses `sunsama-api` library's built-in email/password authentication. Credentials provided via environment variables (SUNSAMA_EMAIL, SUNSAMA_PASSWORD) for stdio transport or HTTP Basic Auth for HTTP transport.
 
 **Storage**: In-memory cache with 30-second TTL, no persistent database (personal use, single session)
 
@@ -135,29 +137,47 @@ Based on robertn702/mcp-sunsama structure, this project extends existing archite
 
 ```
 src/
-├── index.ts             # MCP server entry point (extend existing)
-├── tools/               # MCP tool handlers
-│   ├── tasks.ts            # Task CRUD tools (extend existing)
-│   ├── backlog.ts          # Backlog management tools (NEW)
-│   ├── timeboxing.ts       # Time estimate tools (NEW)
-│   ├── notes.ts            # Note management with intelligent merge (NEW)
-│   ├── channels.ts         # Channel/stream organization (NEW)
-│   ├── archive.ts          # Archived task retrieval (NEW)
-│   └── user.ts             # User/metadata tools (extend existing)
+├── main.ts              # MCP server entry point
+├── schemas.ts           # Zod schemas for tool parameter validation
+├── tools/               # MCP tool handlers (consolidated)
+│   ├── task-tools.ts       # Task CRUD, backlog, timeboxing, notes (16 tools consolidated)
+│   ├── user-tools.ts       # User/metadata operations (get-user)
+│   ├── stream-tools.ts     # Channel/stream operations (get-streams)
+│   ├── task-helpers.ts     # Shared helper functions with caching
+│   ├── shared.ts           # Common utilities and patterns
+│   └── index.ts            # Export all tools
 ├── services/            # Business logic layer
-│   ├── sunsama-client.ts   # HTTP client with retry logic (extend existing)
-│   ├── cache.ts            # 30s TTL cache implementation (NEW)
-│   ├── auth.ts             # Keychain credential storage (extend existing)
-│   └── schema-validator.ts # Zod response validation (NEW)
+│   ├── sunsama-client.ts   # Resilient client wrapper with retry logic
+│   ├── cache.ts            # LRU cache service with TTL (30s tasks, 5min user/streams)
+│   └── schema-validator.ts # Zod validation for API responses
 ├── models/              # TypeScript types and Zod schemas
-│   ├── task.ts             # Task entity (extend existing)
-│   ├── user.ts             # User entity (extend existing)
-│   ├── channel.ts          # Channel/stream entity (NEW)
-│   └── api-responses.ts    # Sunsama API response schemas (NEW)
+│   ├── task.ts             # Task type (from sunsama-api) + helpers
+│   ├── user.ts             # User schema with Zod validation
+│   └── channel.ts          # Channel/Stream schema with Zod
+├── config/              # Configuration modules
+│   ├── cache-config.ts     # Cache TTL constants
+│   ├── transport.ts        # Transport mode configuration
+│   └── session-config.ts   # Session TTL configuration
+├── auth/                # Authentication strategies
+│   ├── stdio.ts            # Stdio transport authentication
+│   ├── http.ts             # HTTP Basic Auth parsing
+│   └── types.ts            # Shared auth types
+├── transports/          # MCP transport implementations
+│   ├── stdio.ts            # Stdio transport (default)
+│   └── http.ts             # HTTP Stream transport with session management
+├── session/
+│   └── session-manager.ts  # Session lifecycle management
+├── resources/
+│   └── index.ts            # API documentation resource
 └── utils/
-    ├── error-handler.ts    # Exponential backoff retry logic (NEW)
-    ├── date-utils.ts       # Timezone-aware date handling (NEW)
-    └── coverage-tracker.ts # Coverage matrix management (NEW)
+    ├── errors.ts           # Custom error classes
+    ├── error-handler.ts    # Exponential backoff retry logic
+    ├── date-utils.ts       # Timezone-aware date utilities (Luxon)
+    ├── coverage-tracker.ts # API usage monitoring
+    ├── client-resolver.ts  # Transport-agnostic client resolution
+    ├── task-filters.ts     # Task completion filtering
+    ├── task-trimmer.ts     # Response size optimization
+    └── to-tsv.ts           # TSV formatting utilities
 
 tests/
 ├── unit/                # Unit tests
@@ -183,7 +203,7 @@ package.json             # Extend existing dependencies
 tsconfig.json            # Extend existing TypeScript config
 ```
 
-**Structure Decision**: Single project extending robertn702/mcp-sunsama. Rationale: Leverage existing MCP infrastructure, authentication, and basic task operations (~60-70% complete). New features added as separate modules (backlog, timeboxing, notes, channels, archive) following existing patterns. No need for frontend/backend split as this is MCP protocol only.
+**Structure Decision**: Standalone MCP server leveraging robertn702/sunsama-api library. Rationale: Clean consolidated architecture with 3 tool files (task-tools, user-tools, stream-tools) instead of 5+ separate files improves maintainability. All task operations consolidated into task-tools.ts with shared helpers in task-helpers.ts. Authentication handled by sunsama-api library. Dual transport support (stdio + HTTP) for flexibility. No frontend/backend split as this is MCP protocol only.
 
 ## Complexity Tracking
 

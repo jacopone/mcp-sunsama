@@ -140,6 +140,7 @@ As a Sunsama user, I want AI assistants to help me review completed and archived
 - Q: What happens when trying to create a task with a date in the past? → A: Allow with warning: Create task on past date but warn user "creating task for past date"
 - Q: How does the system handle tasks with recurring schedules if Sunsama supports recurring tasks? → A: Document as out-of-scope: Explicitly exclude recurring tasks from MVP, add to future roadmap
 - Q: How should deletion confirmation work in the MCP protocol context? → A: MCP client handles confirmation: Server provides deletion metadata, client app shows confirmation dialog
+- Q: How does the "intelligent merge" for notes work in practice? → A: Simplified in implementation: The `update-task-notes` MCP tool accepts new notes content (html or markdown format) and sends it directly to the Sunsama API. The AI client (Claude, Cursor) is responsible for interpreting user intent ("add note" vs "replace note") and constructing the appropriate content to send. This keeps the MCP tool simple and pushes merge logic to the AI layer where natural language interpretation happens.
 
 ## Requirements
 
@@ -168,10 +169,11 @@ As a Sunsama user, I want AI assistants to help me review completed and archived
 - **FR-013**: System MUST update task scheduled dates (reschedule to different day)
 - **FR-014**: System MUST move tasks from scheduled dates back to backlog
 - **FR-015**: System MUST update task text/title
-- **FR-016**: System MUST update task notes with intelligent merge: append notes (with newline separator) when user says "add note", replace notes completely when user says "update note" or "change note"
+- **FR-016**: System MUST update task notes with explicit operation parameter: `update-task-notes` tool accepts `html` or `markdown` parameter (mutually exclusive) containing the new notes content. The Sunsama API handles the update operation. Note: Earlier versions of this spec mentioned "intelligent merge" with append/replace operations based on user language, but the actual implementation uses the simpler direct update approach where the AI client decides what content to send.
 - **FR-017**: System MUST update task time estimates
 - **FR-018**: System MUST update task channel/stream assignments
 - **FR-019**: System MUST update task snooze dates for deferred tasks
+- **FR-019-NOTE**: The scheduled-date (FR-013) and snooze-date (FR-019) operations use the same Sunsama API endpoint (`PATCH /api/v1/tasks/:taskId/snooze`). Both are implemented by the `update-task-snooze-date` MCP tool. The distinction in terminology reflects Sunsama UI language: "scheduled date" = when task appears on calendar, "snooze" = defer task to future date. Functionally identical.
 
 **Task Deletion Operations**:
 
