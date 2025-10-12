@@ -1,0 +1,679 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Sunsama MCP API Coverage Matrix",
+  "description": "Tracks implementation status and coverage of Sunsama API endpoints and features",
+  "version": "1.0.0",
+  "metadata": {
+    "lastUpdated": "2025-10-12",
+    "baseImplementation": "robertn702/mcp-sunsama",
+    "targetCoverage": "90%",
+    "currentCoverage": "60-70%"
+  },
+  "coverageMatrix": {
+    "type": "object",
+    "properties": {
+      "endpoints": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/EndpointCoverage"
+        }
+      },
+      "features": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/FeatureCoverage"
+        }
+      },
+      "summary": {
+        "$ref": "#/definitions/CoverageSummary"
+      }
+    },
+    "required": ["endpoints", "features", "summary"]
+  },
+  "definitions": {
+    "EndpointCoverage": {
+      "type": "object",
+      "description": "Coverage status for a specific API endpoint",
+      "properties": {
+        "endpoint": {
+          "type": "string",
+          "description": "API endpoint path (e.g., '/api/v1/tasks')",
+          "examples": [
+            "/api/v1/tasks",
+            "/api/v1/user",
+            "/api/v1/streams"
+          ]
+        },
+        "method": {
+          "type": "string",
+          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"],
+          "description": "HTTP method"
+        },
+        "mcpTool": {
+          "type": ["string", "null"],
+          "description": "Corresponding MCP tool name (null if not implemented)",
+          "examples": [
+            "get-tasks-by-day",
+            "create-task",
+            "update-task-complete"
+          ]
+        },
+        "implementationStatus": {
+          "type": "string",
+          "enum": [
+            "implemented",
+            "partial",
+            "planned",
+            "discovered",
+            "experimental",
+            "not-planned"
+          ],
+          "description": "Current implementation status"
+        },
+        "statusDefinitions": {
+          "type": "object",
+          "description": "Definitions for status values",
+          "properties": {
+            "implemented": {
+              "type": "string",
+              "const": "Fully implemented with tests and documentation"
+            },
+            "partial": {
+              "type": "string",
+              "const": "Partially implemented, missing some features or edge cases"
+            },
+            "planned": {
+              "type": "string",
+              "const": "Not yet implemented but planned for current roadmap"
+            },
+            "discovered": {
+              "type": "string",
+              "const": "Endpoint discovered but not yet analyzed or implemented"
+            },
+            "experimental": {
+              "type": "string",
+              "const": "Implemented but behavior not fully understood or stable"
+            },
+            "not-planned": {
+              "type": "string",
+              "const": "Discovered but explicitly excluded from implementation scope"
+            }
+          }
+        },
+        "discoveredDate": {
+          "type": "string",
+          "format": "date",
+          "description": "Date endpoint was discovered (YYYY-MM-DD)"
+        },
+        "implementedDate": {
+          "type": ["string", "null"],
+          "format": "date",
+          "description": "Date endpoint was implemented (YYYY-MM-DD)"
+        },
+        "testedDate": {
+          "type": ["string", "null"],
+          "format": "date",
+          "description": "Date endpoint was last tested (YYYY-MM-DD)"
+        },
+        "apiVersion": {
+          "type": ["string", "null"],
+          "description": "Sunsama API version (if detected)",
+          "examples": ["v1", "v2", "unknown"]
+        },
+        "description": {
+          "type": "string",
+          "description": "What this endpoint does"
+        },
+        "requestSchema": {
+          "type": ["object", "null"],
+          "description": "Request payload schema (if known)"
+        },
+        "responseSchema": {
+          "type": ["object", "null"],
+          "description": "Response payload schema (if known)"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Known limitations or missing features"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional implementation notes"
+        },
+        "functionalRequirements": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^FR-\\d{3}$"
+          },
+          "description": "Related functional requirements from spec"
+        }
+      },
+      "required": [
+        "endpoint",
+        "method",
+        "implementationStatus",
+        "discoveredDate",
+        "description"
+      ]
+    },
+    "FeatureCoverage": {
+      "type": "object",
+      "description": "Coverage status for a Sunsama UI feature",
+      "properties": {
+        "featureName": {
+          "type": "string",
+          "description": "Name of Sunsama web UI feature",
+          "examples": [
+            "Daily Planning",
+            "Backlog Management",
+            "Task Timeboxing",
+            "Calendar Integration",
+            "Ritual Workflows"
+          ]
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "task-management",
+            "planning",
+            "time-tracking",
+            "integrations",
+            "collaboration",
+            "analytics",
+            "settings"
+          ],
+          "description": "Feature category"
+        },
+        "coverageLevel": {
+          "type": "string",
+          "enum": [
+            "full",
+            "high",
+            "medium",
+            "low",
+            "none"
+          ],
+          "description": "Level of coverage for this feature"
+        },
+        "coverageLevelDefinitions": {
+          "type": "object",
+          "description": "Definitions for coverage levels",
+          "properties": {
+            "full": {
+              "type": "string",
+              "const": "100% - All feature capabilities accessible via MCP"
+            },
+            "high": {
+              "type": "string",
+              "const": "75-99% - Most capabilities available, minor gaps"
+            },
+            "medium": {
+              "type": "string",
+              "const": "50-74% - Core functionality available, significant gaps"
+            },
+            "low": {
+              "type": "string",
+              "const": "1-49% - Limited functionality, major gaps"
+            },
+            "none": {
+              "type": "string",
+              "const": "0% - Feature not accessible via MCP"
+            }
+          }
+        },
+        "mcpTools": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "MCP tools that provide this feature"
+        },
+        "missingCapabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "What's missing from full coverage"
+        },
+        "userStories": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^US\\d+$"
+          },
+          "description": "Related user stories from spec"
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["P1", "P2", "P3", "P4"],
+          "description": "Priority level (P1 highest)"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes on coverage"
+        }
+      },
+      "required": [
+        "featureName",
+        "category",
+        "coverageLevel",
+        "mcpTools",
+        "priority"
+      ]
+    },
+    "CoverageSummary": {
+      "type": "object",
+      "description": "Overall coverage statistics",
+      "properties": {
+        "totalEndpoints": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total discovered endpoints"
+        },
+        "implementedEndpoints": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Fully implemented endpoints"
+        },
+        "partialEndpoints": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Partially implemented endpoints"
+        },
+        "plannedEndpoints": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Planned but not implemented"
+        },
+        "discoveredEndpoints": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Discovered but not analyzed"
+        },
+        "experimentalEndpoints": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Experimental implementations"
+        },
+        "coveragePercentage": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Overall coverage percentage (implemented / total)"
+        },
+        "totalFeatures": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total Sunsama UI features"
+        },
+        "featuresWithFullCoverage": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Features with full coverage"
+        },
+        "featuresWithHighCoverage": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Features with high coverage (75-99%)"
+        },
+        "featuresWithMediumCoverage": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Features with medium coverage (50-74%)"
+        },
+        "featuresWithLowCoverage": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Features with low coverage (1-49%)"
+        },
+        "featuresWithNoCoverage": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Features with no coverage"
+        },
+        "featureCoveragePercentage": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Weighted average of feature coverage"
+        },
+        "lastUpdated": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update timestamp"
+        },
+        "targetMet": {
+          "type": "boolean",
+          "description": "Whether target coverage (90%) is met"
+        }
+      },
+      "required": [
+        "totalEndpoints",
+        "implementedEndpoints",
+        "coveragePercentage",
+        "totalFeatures",
+        "featureCoveragePercentage",
+        "lastUpdated",
+        "targetMet"
+      ]
+    }
+  },
+  "initialData": {
+    "endpoints": [
+      {
+        "endpoint": "/api/v1/tasks",
+        "method": "GET",
+        "mcpTool": "get-tasks-by-day",
+        "implementationStatus": "implemented",
+        "discoveredDate": "2024-12-01",
+        "implementedDate": "2024-12-15",
+        "testedDate": "2025-10-12",
+        "apiVersion": "v1",
+        "description": "Retrieve tasks for a specific date",
+        "functionalRequirements": ["FR-001"]
+      },
+      {
+        "endpoint": "/api/v1/tasks/backlog",
+        "method": "GET",
+        "mcpTool": "get-tasks-backlog",
+        "implementationStatus": "implemented",
+        "discoveredDate": "2024-12-01",
+        "implementedDate": "2024-12-15",
+        "testedDate": "2025-10-12",
+        "apiVersion": "v1",
+        "description": "Retrieve backlog tasks",
+        "functionalRequirements": ["FR-002"]
+      },
+      {
+        "endpoint": "/api/v1/tasks/archived",
+        "method": "GET",
+        "mcpTool": "get-archived-tasks",
+        "implementationStatus": "implemented",
+        "discoveredDate": "2024-12-01",
+        "implementedDate": "2024-12-15",
+        "testedDate": "2025-10-12",
+        "apiVersion": "v1",
+        "description": "Retrieve archived tasks with date range",
+        "functionalRequirements": ["FR-003"]
+      },
+      {
+        "endpoint": "/api/v1/tasks/{id}",
+        "method": "GET",
+        "mcpTool": "get-task-by-id",
+        "implementationStatus": "implemented",
+        "discoveredDate": "2024-12-01",
+        "implementedDate": "2024-12-15",
+        "testedDate": "2025-10-12",
+        "apiVersion": "v1",
+        "description": "Retrieve single task by ID",
+        "functionalRequirements": ["FR-004"]
+      },
+      {
+        "endpoint": "/api/v1/tasks",
+        "method": "POST",
+        "mcpTool": "create-task",
+        "implementationStatus": "implemented",
+        "discoveredDate": "2024-12-01",
+        "implementedDate": "2024-12-15",
+        "testedDate": "2025-10-12",
+        "apiVersion": "v1",
+        "description": "Create new task",
+        "functionalRequirements": ["FR-006", "FR-007", "FR-008", "FR-009"]
+      },
+      {
+        "endpoint": "/api/v1/tasks/{id}",
+        "method": "PUT",
+        "mcpTool": "update-task-complete",
+        "implementationStatus": "partial",
+        "discoveredDate": "2024-12-01",
+        "implementedDate": "2024-12-15",
+        "testedDate": "2025-10-12",
+        "apiVersion": "v1",
+        "description": "Update task (various operations)",
+        "limitations": [
+          "Multiple update tools instead of unified endpoint",
+          "Some task properties may not be updateable"
+        ],
+        "functionalRequirements": ["FR-012", "FR-013", "FR-014", "FR-015", "FR-016", "FR-017", "FR-018", "FR-019"]
+      },
+      {
+        "endpoint": "/api/v1/tasks/{id}",
+        "method": "DELETE",
+        "mcpTool": "delete-task",
+        "implementationStatus": "implemented",
+        "discoveredDate": "2024-12-01",
+        "implementedDate": "2024-12-15",
+        "testedDate": "2025-10-12",
+        "apiVersion": "v1",
+        "description": "Delete task permanently",
+        "functionalRequirements": ["FR-020", "FR-021"]
+      },
+      {
+        "endpoint": "/api/v1/user",
+        "method": "GET",
+        "mcpTool": "get-user",
+        "implementationStatus": "implemented",
+        "discoveredDate": "2024-12-01",
+        "implementedDate": "2024-12-15",
+        "testedDate": "2025-10-12",
+        "apiVersion": "v1",
+        "description": "Retrieve user profile and settings",
+        "functionalRequirements": ["FR-022", "FR-024"]
+      },
+      {
+        "endpoint": "/api/v1/streams",
+        "method": "GET",
+        "mcpTool": "get-streams",
+        "implementationStatus": "implemented",
+        "discoveredDate": "2024-12-01",
+        "implementedDate": "2024-12-15",
+        "testedDate": "2025-10-12",
+        "apiVersion": "v1",
+        "description": "Retrieve channels/streams for organization",
+        "functionalRequirements": ["FR-023"]
+      },
+      {
+        "endpoint": "/api/v1/tasks/recurring",
+        "method": "GET",
+        "mcpTool": null,
+        "implementationStatus": "not-planned",
+        "discoveredDate": "2025-10-12",
+        "apiVersion": "v1",
+        "description": "Retrieve recurring task templates",
+        "notes": "Explicitly excluded from MVP scope per spec out-of-scope section",
+        "functionalRequirements": []
+      },
+      {
+        "endpoint": "/api/v1/calendar/events",
+        "method": "GET",
+        "mcpTool": null,
+        "implementationStatus": "discovered",
+        "discoveredDate": "2025-10-12",
+        "apiVersion": "v1",
+        "description": "Retrieve calendar events (integration feature)",
+        "notes": "Discovered but not yet analyzed. May require separate integration implementation.",
+        "functionalRequirements": []
+      },
+      {
+        "endpoint": "/api/v1/rituals",
+        "method": "GET",
+        "mcpTool": null,
+        "implementationStatus": "discovered",
+        "discoveredDate": "2025-10-12",
+        "apiVersion": "v1",
+        "description": "Retrieve daily/weekly planning rituals",
+        "notes": "Discovered but not yet analyzed. Feature complexity unknown.",
+        "functionalRequirements": []
+      }
+    ],
+    "features": [
+      {
+        "featureName": "Daily Planning",
+        "category": "planning",
+        "coverageLevel": "full",
+        "mcpTools": [
+          "get-tasks-by-day",
+          "create-task",
+          "update-task-complete",
+          "update-task-scheduled-date"
+        ],
+        "missingCapabilities": [],
+        "userStories": ["US1"],
+        "priority": "P1",
+        "notes": "Core daily planning workflow fully supported"
+      },
+      {
+        "featureName": "Backlog Management",
+        "category": "task-management",
+        "coverageLevel": "full",
+        "mcpTools": [
+          "get-tasks-backlog",
+          "create-task",
+          "update-task-scheduled-date"
+        ],
+        "missingCapabilities": [],
+        "userStories": ["US2"],
+        "priority": "P2",
+        "notes": "Full backlog access and task scheduling"
+      },
+      {
+        "featureName": "Task Timeboxing",
+        "category": "time-tracking",
+        "coverageLevel": "high",
+        "mcpTools": [
+          "update-task-time-estimate",
+          "create-task"
+        ],
+        "missingCapabilities": [
+          "Work session tracking (start/stop timer)",
+          "Focus mode integration",
+          "Actual time vs planned time analytics"
+        ],
+        "userStories": ["US3"],
+        "priority": "P2",
+        "notes": "Time estimates supported, but no active time tracking"
+      },
+      {
+        "featureName": "Task Notes and Context",
+        "category": "task-management",
+        "coverageLevel": "full",
+        "mcpTools": [
+          "update-task-notes",
+          "create-task"
+        ],
+        "missingCapabilities": [],
+        "userStories": ["US4"],
+        "priority": "P3",
+        "notes": "Full notes support with intelligent append/replace"
+      },
+      {
+        "featureName": "Channel/Stream Organization",
+        "category": "task-management",
+        "coverageLevel": "full",
+        "mcpTools": [
+          "get-channels",
+          "get-streams",
+          "update-task-channel",
+          "create-task"
+        ],
+        "missingCapabilities": [],
+        "userStories": ["US5"],
+        "priority": "P3",
+        "notes": "Full channel assignment and retrieval"
+      },
+      {
+        "featureName": "Archived Task History",
+        "category": "task-management",
+        "coverageLevel": "full",
+        "mcpTools": [
+          "get-archived-tasks"
+        ],
+        "missingCapabilities": [],
+        "userStories": ["US6"],
+        "priority": "P3",
+        "notes": "Full archive access with date filtering"
+      },
+      {
+        "featureName": "Calendar Integration",
+        "category": "integrations",
+        "coverageLevel": "none",
+        "mcpTools": [],
+        "missingCapabilities": [
+          "View calendar events",
+          "Create calendar events",
+          "Sync with Google Calendar/Outlook",
+          "Timeboxing with calendar blocking"
+        ],
+        "userStories": [],
+        "priority": "P4",
+        "notes": "Out of scope for MVP - users should configure in Sunsama web UI"
+      },
+      {
+        "featureName": "Recurring Tasks",
+        "category": "task-management",
+        "coverageLevel": "none",
+        "mcpTools": [],
+        "missingCapabilities": [
+          "Create recurring task templates",
+          "Manage recurring schedules",
+          "View upcoming instances"
+        ],
+        "userStories": [],
+        "priority": "P4",
+        "notes": "Explicitly excluded from MVP per spec"
+      },
+      {
+        "featureName": "Ritual Workflows",
+        "category": "planning",
+        "coverageLevel": "none",
+        "mcpTools": [],
+        "missingCapabilities": [
+          "Daily planning ritual",
+          "Weekly planning ritual",
+          "Weekly review ritual"
+        ],
+        "userStories": [],
+        "priority": "P4",
+        "notes": "Discovered but not analyzed. Complex feature."
+      },
+      {
+        "featureName": "Third-Party Integrations",
+        "category": "integrations",
+        "coverageLevel": "none",
+        "mcpTools": [],
+        "missingCapabilities": [
+          "Gmail integration",
+          "Slack integration",
+          "Trello/Asana/Jira import",
+          "GitHub integration"
+        ],
+        "userStories": [],
+        "priority": "P4",
+        "notes": "Out of scope - users configure in Sunsama web UI"
+      }
+    ],
+    "summary": {
+      "totalEndpoints": 12,
+      "implementedEndpoints": 8,
+      "partialEndpoints": 1,
+      "plannedEndpoints": 0,
+      "discoveredEndpoints": 2,
+      "experimentalEndpoints": 0,
+      "coveragePercentage": 75.0,
+      "totalFeatures": 10,
+      "featuresWithFullCoverage": 5,
+      "featuresWithHighCoverage": 1,
+      "featuresWithMediumCoverage": 0,
+      "featuresWithLowCoverage": 0,
+      "featuresWithNoCoverage": 4,
+      "featureCoveragePercentage": 70.0,
+      "lastUpdated": "2025-10-12T00:00:00Z",
+      "targetMet": false,
+      "notes": "Current coverage at 70-75%. Need to implement discovered endpoints and improve partial implementations to reach 90% target."
+    }
+  }
+}

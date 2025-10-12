@@ -1,0 +1,7 @@
+/home/guyfawkes/sunsama-mcp/.devenv/flake.json
+/home/guyfawkes/sunsama-mcp/.devenv.flake.nix
+/home/guyfawkes/sunsama-mcp/.env
+/home/guyfawkes/sunsama-mcp/devenv.local.nix
+/home/guyfawkes/sunsama-mcp/devenv.lock
+/home/guyfawkes/sunsama-mcp/devenv.nix
+/home/guyfawkes/sunsama-mcp/devenv.yaml

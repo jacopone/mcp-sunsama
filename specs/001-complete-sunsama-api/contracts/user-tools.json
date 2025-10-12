@@ -1,0 +1,271 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Sunsama MCP User and Metadata Tools",
+  "description": "MCP tool contracts for Sunsama user profile and metadata operations",
+  "version": "1.0.0",
+  "tools": [
+    {
+      "name": "get-user",
+      "description": "Retrieve authenticated user profile information including timezone, email, and group memberships",
+      "functionalRequirements": ["FR-022", "FR-024"],
+      "userStories": ["US1"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/definitions/User"
+          }
+        },
+        "required": ["user"]
+      },
+      "errorCases": [
+        {
+          "code": -32603,
+          "condition": "Authentication failure",
+          "message": "Failed to authenticate with Sunsama API"
+        },
+        {
+          "code": -32603,
+          "condition": "API failure",
+          "message": "Failed to retrieve user profile"
+        }
+      ]
+    },
+    {
+      "name": "get-channels",
+      "description": "Retrieve available channels/streams for task organization. Alias for get-streams for improved discoverability.",
+      "functionalRequirements": ["FR-023"],
+      "userStories": ["US5"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "channels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Channel"
+            },
+            "description": "List of available channels/streams"
+          },
+          "totalCount": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total number of channels"
+          }
+        },
+        "required": ["channels", "totalCount"]
+      },
+      "errorCases": [
+        {
+          "code": -32603,
+          "condition": "Authentication failure",
+          "message": "Failed to authenticate with Sunsama API"
+        },
+        {
+          "code": -32603,
+          "condition": "API failure",
+          "message": "Failed to retrieve channels"
+        }
+      ]
+    },
+    {
+      "name": "get-streams",
+      "description": "Retrieve available streams/channels for task organization. Sunsama uses 'streams' terminology internally.",
+      "functionalRequirements": ["FR-023"],
+      "userStories": ["US5"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "streams": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Channel"
+            },
+            "description": "List of available streams/channels"
+          },
+          "totalCount": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total number of streams"
+          }
+        },
+        "required": ["streams", "totalCount"]
+      },
+      "errorCases": [
+        {
+          "code": -32603,
+          "condition": "Authentication failure",
+          "message": "Failed to authenticate with Sunsama API"
+        },
+        {
+          "code": -32603,
+          "condition": "API failure",
+          "message": "Failed to retrieve streams"
+        }
+      ]
+    }
+  ],
+  "definitions": {
+    "User": {
+      "type": "object",
+      "description": "Sunsama user profile information",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique user identifier"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "User email address"
+        },
+        "name": {
+          "type": ["string", "null"],
+          "description": "User display name"
+        },
+        "timezone": {
+          "type": "string",
+          "description": "User timezone (IANA timezone identifier, e.g., 'America/New_York')",
+          "examples": [
+            "America/New_York",
+            "Europe/London",
+            "Asia/Tokyo",
+            "UTC"
+          ]
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Group identifier"
+              },
+              "name": {
+                "type": "string",
+                "description": "Group name"
+              }
+            },
+            "required": ["id", "name"]
+          },
+          "description": "User's group memberships/workspaces"
+        },
+        "preferences": {
+          "type": "object",
+          "description": "User preferences and settings",
+          "properties": {
+            "weekStartsOn": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6,
+              "description": "Day of week to start (0=Sunday, 1=Monday, etc.)"
+            },
+            "workingHoursStart": {
+              "type": ["string", "null"],
+              "pattern": "^\\d{2}:\\d{2}$",
+              "description": "Working hours start time (HH:MM format)"
+            },
+            "workingHoursEnd": {
+              "type": ["string", "null"],
+              "pattern": "^\\d{2}:\\d{2}$",
+              "description": "Working hours end time (HH:MM format)"
+            }
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Account creation timestamp (ISO 8601)"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "timezone",
+        "groups"
+      ]
+    },
+    "Channel": {
+      "type": "object",
+      "description": "A channel/stream for organizing tasks (project, category, context)",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique channel identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "Channel display name"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "project",
+            "category",
+            "context",
+            "integration",
+            "custom"
+          ],
+          "description": "Type of channel/stream"
+        },
+        "color": {
+          "type": ["string", "null"],
+          "pattern": "^#[0-9A-Fa-f]{6}$",
+          "description": "Hex color code for visual identification",
+          "examples": ["#FF5733", "#3498DB"]
+        },
+        "icon": {
+          "type": ["string", "null"],
+          "description": "Icon identifier or emoji"
+        },
+        "archived": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether channel is archived"
+        },
+        "taskCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of active tasks in this channel"
+        },
+        "integrationSource": {
+          "type": ["string", "null"],
+          "description": "External integration source (e.g., 'github', 'jira', 'trello')"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Channel creation timestamp (ISO 8601)"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update timestamp (ISO 8601)"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "type",
+        "archived",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  }
+}

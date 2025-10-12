@@ -1,0 +1,867 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Sunsama MCP Task Management Tools",
+  "description": "MCP tool contracts for Sunsama task CRUD operations",
+  "version": "1.0.0",
+  "tools": [
+    {
+      "name": "get-tasks-by-day",
+      "description": "Retrieve all tasks scheduled for a specific date with optional completion status filtering",
+      "functionalRequirements": ["FR-001", "FR-024"],
+      "userStories": ["US1", "US2"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "ISO 8601 date (YYYY-MM-DD) in user's timezone"
+          },
+          "includeCompleted": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether to include completed tasks in results"
+          }
+        },
+        "required": ["date"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "tasks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Task"
+            }
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "totalCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "completedCount": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": ["tasks", "date", "totalCount", "completedCount"]
+      },
+      "errorCases": [
+        {
+          "code": -32602,
+          "condition": "Invalid date format",
+          "message": "Date must be in YYYY-MM-DD format"
+        },
+        {
+          "code": -32603,
+          "condition": "API failure",
+          "message": "Failed to retrieve tasks from Sunsama API"
+        }
+      ]
+    },
+    {
+      "name": "get-tasks-backlog",
+      "description": "Retrieve all unscheduled tasks from the user's backlog with pagination support",
+      "functionalRequirements": ["FR-002", "FR-005"],
+      "userStories": ["US2"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50,
+            "description": "Maximum number of tasks to return"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0,
+            "description": "Number of tasks to skip for pagination"
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "tasks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Task"
+            }
+          },
+          "totalCount": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total number of backlog tasks"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "description": "Whether more tasks are available"
+          }
+        },
+        "required": ["tasks", "totalCount", "hasMore"]
+      },
+      "errorCases": [
+        {
+          "code": -32602,
+          "condition": "Invalid pagination parameters",
+          "message": "Limit must be between 1 and 100, offset must be non-negative"
+        },
+        {
+          "code": -32603,
+          "condition": "API failure",
+          "message": "Failed to retrieve backlog tasks"
+        }
+      ]
+    },
+    {
+      "name": "get-archived-tasks",
+      "description": "Retrieve archived and completed tasks with date range filtering",
+      "functionalRequirements": ["FR-003", "FR-005"],
+      "userStories": ["US6"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Start of date range (inclusive)"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "End of date range (inclusive)"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50,
+            "description": "Maximum number of tasks to return"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0,
+            "description": "Number of tasks to skip for pagination"
+          }
+        },
+        "required": ["startDate", "endDate"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "tasks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Task"
+            }
+          },
+          "dateRange": {
+            "type": "object",
+            "properties": {
+              "start": {
+                "type": "string",
+                "format": "date"
+              },
+              "end": {
+                "type": "string",
+                "format": "date"
+              }
+            },
+            "required": ["start", "end"]
+          },
+          "totalCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "hasMore": {
+            "type": "boolean"
+          }
+        },
+        "required": ["tasks", "dateRange", "totalCount", "hasMore"]
+      },
+      "errorCases": [
+        {
+          "code": -32602,
+          "condition": "Invalid date range",
+          "message": "startDate must be before or equal to endDate"
+        },
+        {
+          "code": -32602,
+          "condition": "Invalid pagination parameters",
+          "message": "Limit must be between 1 and 100, offset must be non-negative"
+        },
+        {
+          "code": -32603,
+          "condition": "API failure",
+          "message": "Failed to retrieve archived tasks"
+        }
+      ]
+    },
+    {
+      "name": "get-task-by-id",
+      "description": "Retrieve detailed information for a specific task by its unique identifier",
+      "functionalRequirements": ["FR-004"],
+      "userStories": ["US1", "US4", "US6"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "taskId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Unique task identifier"
+          }
+        },
+        "required": ["taskId"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$ref": "#/definitions/Task"
+      },
+      "errorCases": [
+        {
+          "code": -32602,
+          "condition": "Empty or invalid taskId",
+          "message": "taskId is required and must be non-empty"
+        },
+        {
+          "code": -32602,
+          "condition": "Task not found",
+          "message": "Task with specified ID does not exist"
+        },
+        {
+          "code": -32603,
+          "condition": "API failure",
+          "message": "Failed to retrieve task"
+        }
+      ]
+    },
+    {
+      "name": "create-task",
+      "description": "Create a new task with title and optional properties (notes, time estimate, dates, channel)",
+      "functionalRequirements": ["FR-006", "FR-007", "FR-008", "FR-009", "FR-010", "FR-011"],
+      "userStories": ["US1", "US2", "US3", "US4", "US5"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "description": "Task title (required)"
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 10000,
+            "description": "Task notes/description"
+          },
+          "plannedTime": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1440,
+            "description": "Planned time estimate in minutes (max 24 hours)"
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Due date (YYYY-MM-DD)"
+          },
+          "scheduledDate": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Scheduled date (YYYY-MM-DD). If omitted, task goes to backlog"
+          },
+          "streamId": {
+            "type": "string",
+            "description": "Channel/stream identifier for task organization"
+          }
+        },
+        "required": ["text"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "$ref": "#/definitions/Task"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Warning messages (e.g., 'creating task for past date')"
+          }
+        },
+        "required": ["task"]
+      },
+      "errorCases": [
+        {
+          "code": -32602,
+          "condition": "Missing required field",
+          "message": "Task text is required and must be non-empty"
+        },
+        {
+          "code": -32602,
+          "condition": "Text too long",
+          "message": "Task text exceeds maximum length of 500 characters"
+        },
+        {
+          "code": -32602,
+          "condition": "Invalid plannedTime",
+          "message": "Planned time must be between 0 and 1440 minutes"
+        },
+        {
+          "code": -32602,
+          "condition": "Invalid date format",
+          "message": "Dates must be in YYYY-MM-DD format"
+        },
+        {
+          "code": -32602,
+          "condition": "Invalid streamId",
+          "message": "Specified stream/channel does not exist"
+        },
+        {
+          "code": -32603,
+          "condition": "API failure",
+          "message": "Failed to create task"
+        }
+      ]
+    },
+    {
+      "name": "update-task-complete",
+      "description": "Mark a task as complete with current timestamp",
+      "functionalRequirements": ["FR-012"],
+      "userStories": ["US1"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "taskId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Unique task identifier"
+          },
+          "completed": {
+            "type": "boolean",
+            "default": true,
+            "description": "Completion status (true to mark complete, false to mark incomplete)"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Custom completion timestamp (ISO 8601). Defaults to current time"
+          }
+        },
+        "required": ["taskId"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$ref": "#/definitions/Task"
+      },
+      "errorCases": [
+        {
+          "code": -32602,
+          "condition": "Invalid taskId",
+          "message": "taskId is required and must be non-empty"
+        },
+        {
+          "code": -32602,
+          "condition": "Task not found",
+          "message": "Task with specified ID does not exist"
+        },
+        {
+          "code": -32602,
+          "condition": "Invalid timestamp",
+          "message": "completedAt must be valid ISO 8601 timestamp"
+        },
+        {
+          "code": -32603,
+          "condition": "API failure",
+          "message": "Failed to update task completion status"
+        }
+      ]
+    },
+    {
+      "name": "update-task-scheduled-date",
+      "description": "Update task scheduled date (reschedule to different day or move to backlog)",
+      "functionalRequirements": ["FR-013", "FR-014"],
+      "userStories": ["US1", "US2"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "taskId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Unique task identifier"
+          },
+          "scheduledDate": {
+            "type": ["string", "null"],
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "New scheduled date (YYYY-MM-DD). Set to null to move to backlog"
+          }
+        },
+        "required": ["taskId", "scheduledDate"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "$ref": "#/definitions/Task"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Warning messages (e.g., 'creating task for past date')"
+          }
+        },
+        "required": ["task"]
+      },
+      "errorCases": [
+        {
+          "code": -32602,
+          "condition": "Invalid taskId",
+          "message": "taskId is required and must be non-empty"
+        },
+        {
+          "code": -32602,
+          "condition": "Task not found",
+          "message": "Task with specified ID does not exist"
+        },
+        {
+          "code": -32602,
+          "condition": "Invalid date format",
+          "message": "scheduledDate must be in YYYY-MM-DD format or null"
+        },
+        {
+          "code": -32603,
+          "condition": "API failure",
+          "message": "Failed to update task scheduled date"
+        }
+      ]
+    },
+    {
+      "name": "update-task-notes",
+      "description": "Update task notes with intelligent merge behavior (append or replace based on operation)",
+      "functionalRequirements": ["FR-016"],
+      "userStories": ["US4"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "taskId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Unique task identifier"
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 10000,
+            "description": "New notes content"
+          },
+          "operation": {
+            "type": "string",
+            "enum": ["append", "replace"],
+            "default": "append",
+            "description": "How to merge notes: 'append' adds with newline separator, 'replace' overwrites"
+          }
+        },
+        "required": ["taskId", "notes"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$ref": "#/definitions/Task"
+      },
+      "errorCases": [
+        {
+          "code": -32602,
+          "condition": "Invalid taskId",
+          "message": "taskId is required and must be non-empty"
+        },
+        {
+          "code": -32602,
+          "condition": "Task not found",
+          "message": "Task with specified ID does not exist"
+        },
+        {
+          "code": -32602,
+          "condition": "Notes too long",
+          "message": "Notes exceed maximum length of 10000 characters"
+        },
+        {
+          "code": -32602,
+          "condition": "Invalid operation",
+          "message": "operation must be 'append' or 'replace'"
+        },
+        {
+          "code": -32603,
+          "condition": "API failure",
+          "message": "Failed to update task notes"
+        }
+      ]
+    },
+    {
+      "name": "update-task-time-estimate",
+      "description": "Update task planned time estimate in minutes",
+      "functionalRequirements": ["FR-017"],
+      "userStories": ["US3"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "taskId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Unique task identifier"
+          },
+          "plannedTime": {
+            "type": ["integer", "null"],
+            "minimum": 0,
+            "maximum": 1440,
+            "description": "Planned time in minutes (max 24 hours). Set to null to clear estimate"
+          }
+        },
+        "required": ["taskId", "plannedTime"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$ref": "#/definitions/Task"
+      },
+      "errorCases": [
+        {
+          "code": -32602,
+          "condition": "Invalid taskId",
+          "message": "taskId is required and must be non-empty"
+        },
+        {
+          "code": -32602,
+          "condition": "Task not found",
+          "message": "Task with specified ID does not exist"
+        },
+        {
+          "code": -32602,
+          "condition": "Invalid plannedTime",
+          "message": "plannedTime must be between 0 and 1440 minutes or null"
+        },
+        {
+          "code": -32603,
+          "condition": "API failure",
+          "message": "Failed to update task time estimate"
+        }
+      ]
+    },
+    {
+      "name": "update-task-channel",
+      "description": "Update task channel/stream assignment for organization",
+      "functionalRequirements": ["FR-018"],
+      "userStories": ["US5"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "taskId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Unique task identifier"
+          },
+          "streamId": {
+            "type": ["string", "null"],
+            "description": "Channel/stream identifier. Set to null to remove channel assignment"
+          }
+        },
+        "required": ["taskId", "streamId"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$ref": "#/definitions/Task"
+      },
+      "errorCases": [
+        {
+          "code": -32602,
+          "condition": "Invalid taskId",
+          "message": "taskId is required and must be non-empty"
+        },
+        {
+          "code": -32602,
+          "condition": "Task not found",
+          "message": "Task with specified ID does not exist"
+        },
+        {
+          "code": -32602,
+          "condition": "Invalid streamId",
+          "message": "Specified stream/channel does not exist"
+        },
+        {
+          "code": -32603,
+          "condition": "API failure",
+          "message": "Failed to update task channel"
+        }
+      ]
+    },
+    {
+      "name": "update-task-snooze",
+      "description": "Update task snooze date for deferred tasks",
+      "functionalRequirements": ["FR-019"],
+      "userStories": ["US2"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "taskId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Unique task identifier"
+          },
+          "snoozeDate": {
+            "type": ["string", "null"],
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Snooze until date (YYYY-MM-DD). Set to null to clear snooze"
+          }
+        },
+        "required": ["taskId", "snoozeDate"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$ref": "#/definitions/Task"
+      },
+      "errorCases": [
+        {
+          "code": -32602,
+          "condition": "Invalid taskId",
+          "message": "taskId is required and must be non-empty"
+        },
+        {
+          "code": -32602,
+          "condition": "Task not found",
+          "message": "Task with specified ID does not exist"
+        },
+        {
+          "code": -32602,
+          "condition": "Invalid date format",
+          "message": "snoozeDate must be in YYYY-MM-DD format or null"
+        },
+        {
+          "code": -32603,
+          "condition": "API failure",
+          "message": "Failed to update task snooze date"
+        }
+      ]
+    },
+    {
+      "name": "update-task-text",
+      "description": "Update task title/text",
+      "functionalRequirements": ["FR-015"],
+      "userStories": ["US1"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "taskId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Unique task identifier"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "description": "New task title"
+          }
+        },
+        "required": ["taskId", "text"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$ref": "#/definitions/Task"
+      },
+      "errorCases": [
+        {
+          "code": -32602,
+          "condition": "Invalid taskId",
+          "message": "taskId is required and must be non-empty"
+        },
+        {
+          "code": -32602,
+          "condition": "Task not found",
+          "message": "Task with specified ID does not exist"
+        },
+        {
+          "code": -32602,
+          "condition": "Empty or invalid text",
+          "message": "Task text is required and must be between 1 and 500 characters"
+        },
+        {
+          "code": -32603,
+          "condition": "API failure",
+          "message": "Failed to update task text"
+        }
+      ]
+    },
+    {
+      "name": "delete-task",
+      "description": "Permanently delete a task by identifier. Provides task metadata to enable client-side confirmation dialogs.",
+      "functionalRequirements": ["FR-020", "FR-021"],
+      "userStories": ["US1"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "taskId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Unique task identifier"
+          },
+          "confirm": {
+            "type": "boolean",
+            "default": false,
+            "description": "Confirmation flag (client should prompt user before setting to true)"
+          }
+        },
+        "required": ["taskId", "confirm"],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "boolean",
+            "description": "Whether task was successfully deleted"
+          },
+          "taskId": {
+            "type": "string",
+            "description": "ID of deleted task"
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string",
+                "description": "Task title for confirmation"
+              },
+              "date": {
+                "type": ["string", "null"],
+                "description": "Scheduled date if any"
+              },
+              "notesPreview": {
+                "type": "string",
+                "description": "First 100 characters of notes"
+              }
+            }
+          }
+        },
+        "required": ["deleted", "taskId"]
+      },
+      "errorCases": [
+        {
+          "code": -32602,
+          "condition": "Invalid taskId",
+          "message": "taskId is required and must be non-empty"
+        },
+        {
+          "code": -32602,
+          "condition": "Task not found",
+          "message": "Task with specified ID does not exist"
+        },
+        {
+          "code": -32602,
+          "condition": "Confirmation required",
+          "message": "confirm must be set to true to delete task"
+        },
+        {
+          "code": -32603,
+          "condition": "API failure",
+          "message": "Failed to delete task"
+        }
+      ]
+    }
+  ],
+  "definitions": {
+    "Task": {
+      "type": "object",
+      "description": "A Sunsama task with all properties",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique task identifier"
+        },
+        "text": {
+          "type": "string",
+          "description": "Task title/text"
+        },
+        "notes": {
+          "type": ["string", "null"],
+          "description": "Task notes/description"
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Completion status"
+        },
+        "completedAt": {
+          "type": ["string", "null"],
+          "format": "date-time",
+          "description": "Completion timestamp (ISO 8601)"
+        },
+        "scheduledDate": {
+          "type": ["string", "null"],
+          "format": "date",
+          "description": "Scheduled date (YYYY-MM-DD) or null if in backlog"
+        },
+        "dueDate": {
+          "type": ["string", "null"],
+          "format": "date",
+          "description": "Due date (YYYY-MM-DD)"
+        },
+        "plannedTime": {
+          "type": ["integer", "null"],
+          "description": "Planned time estimate in minutes"
+        },
+        "actualTime": {
+          "type": ["integer", "null"],
+          "description": "Actual time spent in minutes"
+        },
+        "streamId": {
+          "type": ["string", "null"],
+          "description": "Channel/stream identifier"
+        },
+        "streamName": {
+          "type": ["string", "null"],
+          "description": "Channel/stream name"
+        },
+        "snoozeDate": {
+          "type": ["string", "null"],
+          "format": "date",
+          "description": "Snooze until date (YYYY-MM-DD)"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp (ISO 8601)"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update timestamp (ISO 8601)"
+        }
+      },
+      "required": [
+        "id",
+        "text",
+        "completed",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  }
+}
