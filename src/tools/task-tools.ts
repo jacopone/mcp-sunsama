@@ -57,6 +57,7 @@ import {
   invalidateTaskCaches,
   invalidateDayCaches,
   validateTaskText,
+  validateTimeEstimate,
   formatTaskResponse,
 } from "./task-helpers.js";
 import { getTaskScheduledDate } from "../models/task.js";
@@ -161,6 +162,14 @@ export const createTaskTool = withTransportClient({
     context: ToolContext,
   ) => {
     // T022: Past date warning + cache invalidation
+    // T033: Validate time estimate (FR-017)
+    if (timeEstimate !== undefined) {
+      const validation = validateTimeEstimate(timeEstimate);
+      if (!validation.valid) {
+        throw new Error(validation.error);
+      }
+    }
+
     const options: CreateTaskOptions = {};
     if (notes) options.notes = notes;
     if (streamIds) options.streamIds = streamIds;
@@ -352,11 +361,20 @@ export const updateTaskPlannedTimeTool = withTransportClient({
       UpdateTaskPlannedTimeInput,
     context: ToolContext,
   ) => {
+    // T033: Validate time estimate (FR-017: 0-1440 minutes)
+    const validation = validateTimeEstimate(timeEstimateMinutes);
+    if (!validation.valid) {
+      throw new Error(validation.error);
+    }
+
     const result = await context.client.updateTaskPlannedTime(
       taskId,
       timeEstimateMinutes,
       limitResponsePayload,
     );
+
+    // Invalidate task cache
+    invalidateTaskCaches(taskId);
 
     return formatJsonResponse({
       success: result.success,
