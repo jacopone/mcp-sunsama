@@ -1,73 +1,40 @@
 import { z } from 'zod';
+import type { Task as SunsamaTask } from 'sunsama-api/types';
 
 /**
- * Task Entity Schema
+ * Re-export the Sunsama Task type as our primary Task type
+ * This ensures type compatibility with the API responses
+ */
+export type Task = SunsamaTask;
+
+/**
+ * Task Entity Schema (for runtime validation)
  *
- * Represents a work item with scheduling, completion tracking,
- * and organizational properties.
+ * Validates critical fields from Sunsama API responses.
+ * Uses z.any() for complex nested objects since we're just passing them through.
+ *
+ * Note: The schema is intentionally relaxed to accommodate API changes.
+ * Constitution Principle III: Resilient Error Handling means graceful degradation.
  */
 export const TaskSchema = z.object({
-  id: z.string().uuid('Invalid task ID format'),
-  text: z.string()
-    .min(1, 'Task text required')
-    .max(500, 'Task text too long (max 500 characters)'),
-  notes: z.string()
-    .max(10000, 'Notes too long (max 10000 characters)')
-    .optional()
-    .nullable(),
-  scheduledDate: z.string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format')
-    .optional()
-    .nullable(),
-  dueDate: z.string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format')
-    .optional()
-    .nullable(),
-  plannedTime: z.number()
-    .int('Planned time must be integer minutes')
-    .min(0, 'Planned time cannot be negative')
-    .max(1440, 'Planned time cannot exceed 24 hours')
-    .optional()
-    .nullable(),
-  actualTime: z.number()
-    .int('Actual time must be integer minutes')
-    .min(0, 'Actual time cannot be negative')
-    .optional()
-    .nullable(),
-  completed: z.boolean().default(false),
-  completedAt: z.string()
-    .datetime('Invalid datetime format')
-    .optional()
-    .nullable(),
-  snoozedUntil: z.string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format')
-    .optional()
-    .nullable(),
-  streamId: z.string().uuid().optional().nullable(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  archived: z.boolean().default(false),
-}).refine(
-  (data) => {
-    // If completed, completedAt must be set
-    if (data.completed && !data.completedAt) {
-      return false;
-    }
-    return true;
-  },
-  { message: 'Completed tasks must have completedAt timestamp' }
-).refine(
-  (data) => {
-    // Due date must be >= scheduled date if both present
-    if (data.scheduledDate && data.dueDate) {
-      return new Date(data.dueDate) >= new Date(data.scheduledDate);
-    }
-    return true;
-  },
-  { message: 'Due date must be on or after scheduled date' }
-);
+  // Core ID fields
+  _id: z.string(),
+  text: z.string(),
 
-export type Task = z.infer<typeof TaskSchema>;
+  // Common fields we interact with
+  completed: z.boolean(),
+  notes: z.string(),
+
+  // Allow any other fields (API has 40+ fields)
+}).passthrough();
+
+/**
+ * Helper function to extract scheduled date from task
+ * Sunsama stores scheduled date in task.snooze.date
+ */
+export function getTaskScheduledDate(task: Task): string | null {
+  return task.snooze?.date || null;
+}
 
 /**
  * Partial Task Update Schema

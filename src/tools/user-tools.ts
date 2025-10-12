@@ -1,5 +1,6 @@
 import { type GetUserInput, getUserSchema } from "../schemas.js";
 import { formatJsonResponse, withTransportClient, type ToolContext } from "./shared.js";
+import { getCachedUser } from "./task-helpers.js";
 
 export const getUserTool = withTransportClient({
   name: "get-user",
@@ -7,8 +8,8 @@ export const getUserTool = withTransportClient({
     "Get current user information including profile, timezone, and group details",
   parameters: getUserSchema,
   execute: async (_args: GetUserInput, context: ToolContext) => {
-    // Client auto-injected by withTransportClient
-    const user = await context.client.getUser();
+    // T027: Cache integration (5min TTL) + Zod validation + expose timezone
+    const user = await getCachedUser(context);
 
     return formatJsonResponse(user);
   },

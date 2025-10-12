@@ -25,7 +25,7 @@ export function validateTaskResponse(data: unknown): ValidationResult<Task> {
     const validated = TaskSchema.parse(data);
     return {
       success: true,
-      data: validated
+      data: validated as unknown as Task
     };
   } catch (error) {
     if (error instanceof ZodError) {
@@ -101,7 +101,7 @@ export function validateTaskArrayResponse(data: unknown): ValidationResult<Task[
       };
     }
 
-    const validated = data.map(item => TaskSchema.parse(item));
+    const validated = data.map(item => TaskSchema.parse(item)) as unknown as Task[];
     return {
       success: true,
       data: validated

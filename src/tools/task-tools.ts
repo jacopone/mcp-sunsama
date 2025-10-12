@@ -48,6 +48,17 @@ import {
   withTransportClient,
   type ToolContext,
 } from "./shared.js";
+import {
+  getCachedTasksByDay,
+  getCachedTaskById,
+  getUserTimezone,
+  checkPastDateWarning,
+  invalidateTaskCaches,
+  invalidateDayCaches,
+  validateTaskText,
+  formatTaskResponse,
+} from "./task-helpers.js";
+import { getTaskScheduledDate } from "../models/task.js";
 
 // Task Query Tools
 export const getTasksBacklogTool = withTransportClient({
@@ -71,13 +82,15 @@ export const getTasksByDayTool = withTransportClient({
     { day, timezone, completionFilter = "all" }: GetTasksByDayInput,
     context: ToolContext,
   ) => {
+    // T020: Cache integration + timezone awareness
     // If no timezone provided, get the user's default timezone
     let resolvedTimezone = timezone;
     if (!resolvedTimezone) {
-      resolvedTimezone = await context.client.getUserTimezone();
+      resolvedTimezone = await getUserTimezone(context);
     }
 
-    const tasks = await context.client.getTasksByDay(day, resolvedTimezone);
+    // Get tasks with caching (30s TTL)
+    const tasks = await getCachedTasksByDay(day, resolvedTimezone, context);
     const filteredTasks = filterTasksByCompletion(tasks, completionFilter);
     const trimmedTasks = trimTasksForResponse(filteredTasks);
 
@@ -119,7 +132,8 @@ export const getTaskByIdTool = withTransportClient({
   description: "Get a specific task by its ID",
   parameters: getTaskByIdSchema,
   execute: async ({ taskId }: GetTaskByIdInput, context: ToolContext) => {
-    const task = await context.client.getTaskById(taskId) || null;
+    // T021: Cache integration + Zod validation
+    const task = await getCachedTaskById(taskId, context);
 
     return formatJsonResponse(task);
   },
@@ -144,6 +158,7 @@ export const createTaskTool = withTransportClient({
     }: CreateTaskInput,
     context: ToolContext,
   ) => {
+    // T022: Past date warning + cache invalidation
     const options: CreateTaskOptions = {};
     if (notes) options.notes = notes;
     if (streamIds) options.streamIds = streamIds;
@@ -154,15 +169,28 @@ export const createTaskTool = withTransportClient({
     if (taskId) options.taskId = taskId;
     if (integration) options.integration = integration;
 
+    // Check for past date warning (FR-010)
+    let warning: string | null = null;
+    if (snoozeUntil) {
+      const userTimezone = await getUserTimezone(context);
+      warning = checkPastDateWarning(snoozeUntil, userTimezone);
+    }
+
     const result = await context.client.createTask(text, options);
 
-    return formatJsonResponse({
+    // Invalidate caches (bypass cache on write)
+    const createdTaskId = result.updatedFields?._id;
+    if (createdTaskId) {
+      invalidateTaskCaches(createdTaskId, snoozeUntil || null);
+    }
+
+    return formatJsonResponse(formatTaskResponse({
       success: result.success,
-      taskId: result.updatedFields?._id,
+      taskId: createdTaskId,
       title: text,
       created: true,
       updatedFields: result.updatedFields,
-    });
+    }, warning));
   },
 });
 
@@ -174,16 +202,30 @@ export const deleteTaskTool = withTransportClient({
     { taskId, limitResponsePayload, wasTaskMerged }: DeleteTaskInput,
     context: ToolContext,
   ) => {
+    // T026: Get task metadata before deletion for confirmation (FR-021)
+    const task = await getCachedTaskById(taskId, context);
+
     const result = await context.client.deleteTask(
       taskId,
       limitResponsePayload,
       wasTaskMerged,
     );
 
+    // Invalidate all related caches
+    if (task) {
+      invalidateTaskCaches(taskId, getTaskScheduledDate(task));
+    }
+
+    // Return task metadata for client confirmation dialog
     return formatJsonResponse({
       success: result.success,
       taskId,
       deleted: true,
+      taskMetadata: task ? {
+        text: task.text,
+        scheduledDate: getTaskScheduledDate(task),
+        notesPreview: task.notes?.substring(0, 100),
+      } : null,
       updatedFields: result.updatedFields,
     });
   },
@@ -198,16 +240,26 @@ export const updateTaskCompleteTool = withTransportClient({
     { taskId, completeOn, limitResponsePayload }: UpdateTaskCompleteInput,
     context: ToolContext,
   ) => {
+    // T023: Set completedAt timestamp + invalidate caches
+    // Get task to know which day cache to invalidate
+    const task = await getCachedTaskById(taskId, context);
+
     const result = await context.client.updateTaskComplete(
       taskId,
       completeOn,
       limitResponsePayload,
     );
 
+    // Invalidate task and day caches (bypass cache on write)
+    if (task) {
+      invalidateTaskCaches(taskId, getTaskScheduledDate(task));
+    }
+
     return formatJsonResponse({
       success: result.success,
       taskId,
       completed: true,
+      completedAt: completeOn || new Date().toISOString(),
       updatedFields: result.updatedFields,
     });
   },
@@ -223,10 +275,22 @@ export const updateTaskSnoozeDateTool = withTransportClient({
       UpdateTaskSnoozeDateInput,
     context: ToolContext,
   ) => {
+    // T024: Handle null (move to backlog FR-014) + past date warning + invalidate old and new day caches
+    // Get task to know old date
+    const task = await getCachedTaskById(taskId, context);
+    const oldDay = task ? getTaskScheduledDate(task) : null;
+
     const options: { timezone?: string; limitResponsePayload?: boolean } = {};
-    if (timezone) options.timezone = timezone;
+    const userTimezone = timezone || await getUserTimezone(context);
+    options.timezone = userTimezone;
     if (limitResponsePayload !== undefined) {
       options.limitResponsePayload = limitResponsePayload;
+    }
+
+    // Check for past date warning if rescheduling (not moving to backlog)
+    let warning: string | null = null;
+    if (newDay) {
+      warning = checkPastDateWarning(newDay, userTimezone);
     }
 
     const result = await context.client.updateTaskSnoozeDate(
@@ -235,12 +299,16 @@ export const updateTaskSnoozeDateTool = withTransportClient({
       options,
     );
 
-    return formatJsonResponse({
+    // Invalidate old and new day caches
+    invalidateDayCaches(oldDay, newDay);
+
+    return formatJsonResponse(formatTaskResponse({
       success: result.success,
       taskId,
       newDay,
+      movedToBacklog: newDay === null,
       updatedFields: result.updatedFields,
-    });
+    }, warning));
   },
 });
 
@@ -372,6 +440,12 @@ export const updateTaskTextTool = withTransportClient({
       UpdateTaskTextInput,
     context: ToolContext,
   ) => {
+    // T025: Validate text length (FR-015) + invalidate task cache
+    const validation = validateTaskText(text);
+    if (!validation.valid) {
+      throw new Error(validation.error);
+    }
+
     const options: {
       recommendedStreamId?: string | null;
       limitResponsePayload?: boolean;
@@ -384,6 +458,9 @@ export const updateTaskTextTool = withTransportClient({
     }
 
     const result = await context.client.updateTaskText(taskId, text, options);
+
+    // Invalidate task cache (bypass cache on write)
+    invalidateTaskCaches(taskId);
 
     return formatJsonResponse({
       success: result.success,
