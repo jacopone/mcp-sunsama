@@ -1,5 +1,5 @@
 import { chromium } from 'playwright-core';
-import type { Browser, BrowserContext, Page } from 'playwright-core';
+import type { Browser, BrowserContext } from 'playwright-core';
 import { SunsamaClient } from 'sunsama-api/client';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -89,44 +89,44 @@ export function clearSessionToken(): void {
 }
 
 /**
- * Detect available browser channel
+ * Detect available browser executable path
+ * Returns the full path to the browser binary, or null if not found.
+ * Playwright's channel-based detection fails on NixOS and other non-standard layouts,
+ * so we always return the actual executable path.
  */
-function detectBrowserChannel(): 'chrome' | 'msedge' | 'chromium' | null {
-  // Try to find Chrome
-  const chromePaths = [
+function detectBrowserExecutable(): string | null {
+  const browserPaths = [
+    // Chrome (standard Linux)
     '/usr/bin/google-chrome',
     '/usr/bin/google-chrome-stable',
+    // Chrome (NixOS)
+    '/run/current-system/sw/bin/google-chrome-stable',
+    // Chromium (standard Linux)
     '/usr/bin/chromium',
     '/usr/bin/chromium-browser',
     '/snap/bin/chromium',
+    // Chromium (NixOS)
+    '/run/current-system/sw/bin/chromium',
+    // Edge (Linux)
+    '/usr/bin/microsoft-edge',
+    // macOS
     '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+    // Windows
     'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
     'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-  ];
-
-  for (const chromePath of chromePaths) {
-    if (fs.existsSync(chromePath)) {
-      console.error(`[Browser Auth] Found Chrome at ${chromePath}`);
-      return 'chrome';
-    }
-  }
-
-  // Try to find Edge
-  const edgePaths = [
-    '/usr/bin/microsoft-edge',
-    '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
     'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
   ];
 
-  for (const edgePath of edgePaths) {
-    if (fs.existsSync(edgePath)) {
-      console.error(`[Browser Auth] Found Edge at ${edgePath}`);
-      return 'msedge';
+  for (const browserPath of browserPaths) {
+    if (fs.existsSync(browserPath)) {
+      console.error(`[Browser Auth] Found browser at ${browserPath}`);
+      return browserPath;
     }
   }
 
-  console.error(`[Browser Auth] No browser found, will try 'chromium' channel`);
-  return 'chromium';
+  console.error(`[Browser Auth] No browser found in known paths`);
+  return null;
 }
 
 /**
@@ -137,23 +137,26 @@ async function launchBrowserForLogin(
 ): Promise<string> {
   const {
     loginTimeout = 5 * 60 * 1000, // 5 minutes
-    browserChannel = detectBrowserChannel() || 'chromium',
     headless = false,
-    executablePath,
+    executablePath = detectBrowserExecutable() || undefined,
   } = config;
 
   console.error(`[Browser Auth] Launching browser for authentication...`);
-  console.error(`[Browser Auth] Browser channel: ${browserChannel}`);
+  console.error(`[Browser Auth] Executable: ${executablePath || 'playwright default'}`);
   console.error(`[Browser Auth] Login timeout: ${loginTimeout}ms`);
+
+  if (!executablePath) {
+    throw new Error(
+      'No browser found. Install Chrome, Chromium, or Edge, or set BROWSER_AUTH_EXECUTABLE_PATH.'
+    );
+  }
 
   let browser: Browser | null = null;
   let context: BrowserContext | null = null;
 
   try {
-    // Launch browser with user's system browser
     browser = await chromium.launch({
       headless,
-      channel: browserChannel as any,
       executablePath,
     });
 
