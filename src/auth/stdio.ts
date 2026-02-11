@@ -1,4 +1,8 @@
 import { SunsamaClient } from "sunsama-api/client";
+import {
+  authenticateWithBrowser,
+  isBrowserAuthRequired,
+} from "./browser-auth.js";
 
 /**
  * Cached authentication promise to prevent concurrent auth attempts
@@ -27,19 +31,34 @@ export async function initializeStdioAuth(): Promise<SunsamaClient> {
   }
 
   const sunsamaClient = new SunsamaClient();
-  await sunsamaClient.login(process.env.SUNSAMA_EMAIL, process.env.SUNSAMA_PASSWORD);
+  await sunsamaClient.login(
+    process.env.SUNSAMA_EMAIL,
+    process.env.SUNSAMA_PASSWORD
+  );
 
   return sunsamaClient;
 }
 
 /**
  * Get the global Sunsama client instance for stdio transport
+ * Automatically selects authentication method:
+ * - Browser OAuth if no email/password configured
+ * - Email/password if credentials are provided
+ *
  * @returns {Promise<SunsamaClient>} The authenticated global client
- * @throws {Error} If credentials are missing or authentication fails
+ * @throws {Error} If authentication fails
  */
 export async function getGlobalSunsamaClient(): Promise<SunsamaClient> {
   if (!authenticationPromise) {
-    authenticationPromise = initializeStdioAuth();
+    if (isBrowserAuthRequired()) {
+      console.error(
+        "[Stdio Auth] No email/password found, using browser OAuth flow..."
+      );
+      authenticationPromise = authenticateWithBrowser();
+    } else {
+      console.error("[Stdio Auth] Using email/password authentication...");
+      authenticationPromise = initializeStdioAuth();
+    }
   }
 
   return authenticationPromise;

@@ -418,6 +418,59 @@ export const errorResponseSchema = z.object({
 });
 
 /**
+ * Calendar Event Operation Schemas
+ */
+
+// Calendar organizer calendar schema
+export const organizerCalendarSchema = z.object({
+  calendarId: z.string().min(1, "Calendar ID is required").describe(
+    "Calendar ID (e.g., email for Google Calendar)",
+  ),
+  calendarDisplayName: z.string().min(1, "Calendar display name is required")
+    .describe(
+      "Human-readable calendar name",
+    ),
+});
+
+// Get calendars parameters (no parameters needed)
+export const getCalendarsSchema = z.object({});
+
+// Create calendar event parameters
+export const createCalendarEventSchema = z.object({
+  title: z.string().min(1, "Event title is required").describe(
+    "Event title/name",
+  ),
+  startDate: z.string().datetime("Must be a valid ISO date-time string")
+    .describe(
+      "Event start date in ISO format (YYYY-MM-DDTHH:mm:ss.SSSZ)",
+    ),
+  endDate: z.string().datetime("Must be a valid ISO date-time string").describe(
+    "Event end date in ISO format (YYYY-MM-DDTHH:mm:ss.SSSZ)",
+  ),
+  calendarId: z.string().min(1, "Calendar ID is required").describe(
+    "Calendar ID where the event should be created",
+  ),
+  calendarDisplayName: z.string().optional().describe(
+    "Calendar display name (optional, will be fetched if not provided)",
+  ),
+  description: z.string().optional().describe(
+    "Event description/notes",
+  ),
+  location: z.string().optional().describe(
+    "Event location",
+  ),
+  streamIds: z.array(z.string()).optional().describe(
+    "Array of stream IDs to associate with the event",
+  ),
+  isAllDay: z.boolean().optional().describe(
+    "Whether the event is an all-day event",
+  ),
+  timeZone: z.string().optional().describe(
+    "Timezone for the event (e.g., 'America/New_York')",
+  ),
+});
+
+/**
  * Type Exports (for use in tools)
  */
 export type CompletionFilter = z.infer<typeof completionFilterSchema>;
@@ -457,3 +510,9 @@ export type UserResponse = z.infer<typeof userResponseSchema>;
 export type TasksResponse = z.infer<typeof tasksResponseSchema>;
 export type StreamsResponse = z.infer<typeof streamsResponseSchema>;
 export type ErrorResponse = z.infer<typeof errorResponseSchema>;
+
+export type GetCalendarsInput = z.infer<typeof getCalendarsSchema>;
+export type CreateCalendarEventInput = z.infer<
+  typeof createCalendarEventSchema
+>;
+export type OrganizerCalendar = z.infer<typeof organizerCalendarSchema>;

@@ -2,6 +2,10 @@ import { createHash } from "crypto";
 import { SunsamaClient } from "sunsama-api/client";
 import type { SessionData } from "./types.js";
 import { getSessionConfig } from "../config/session-config.js";
+import {
+  authenticateWithBrowser,
+  isBrowserAuthRequired,
+} from "./browser-auth.js";
 
 // Client cache with TTL management (keyed by credential hash for security)
 const clientCache = new Map<string, SessionData>();
@@ -133,12 +137,54 @@ export function cleanupAllClients(): void {
  * Authenticate HTTP request and get or create cached client
  * Supports both Basic Auth (email/password) and Bearer token authentication
  * Uses secure cache key (password hash) and race condition protection
+ *
+ * Authentication methods (in order of preference):
+ * 1. HTTP Basic Auth (email/password) - for multi-user environments
+ * 2. Browser OAuth - fallback when no auth header and no env vars
  */
 export async function authenticateHttpRequest(
   authHeader?: string
 ): Promise<SessionData> {
+  // If no auth header provided, try browser auth or env vars
   if (!authHeader) {
-    throw new Error("Authorization header required (Basic or Bearer)");
+    if (isBrowserAuthRequired()) {
+      console.error(
+        "[HTTP Auth] No auth header and no env vars, using browser OAuth..."
+      );
+      const sunsamaClient = await authenticateWithBrowser();
+      const now = Date.now();
+      return {
+        sunsamaClient,
+        email: "browser-oauth-user",
+        createdAt: now,
+        lastAccessedAt: now,
+      };
+    }
+
+    if (process.env.SUNSAMA_EMAIL && process.env.SUNSAMA_PASSWORD) {
+      console.error("[HTTP Auth] No auth header, using env vars...");
+      const email = process.env.SUNSAMA_EMAIL;
+      const password = process.env.SUNSAMA_PASSWORD;
+      const cacheKey = getCacheKey(email, password);
+      const now = Date.now();
+
+      const sunsamaClient = new SunsamaClient();
+      await sunsamaClient.login(email, password);
+
+      const sessionData: SessionData = {
+        sunsamaClient,
+        email,
+        createdAt: now,
+        lastAccessedAt: now,
+      };
+
+      clientCache.set(cacheKey, sessionData);
+      return sessionData;
+    }
+
+    throw new Error(
+      "Authentication required: provide Basic/Bearer Auth header, set SUNSAMA_EMAIL/SUNSAMA_PASSWORD env vars, or allow browser OAuth"
+    );
   }
 
   const isBearer = authHeader.startsWith('Bearer ');

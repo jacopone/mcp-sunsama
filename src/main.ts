@@ -22,6 +22,7 @@ Available tools:
 - Task operations: get tasks by day, get backlog tasks, get archived tasks, get task by ID
 - Task mutations: create tasks, mark complete, delete tasks, reschedule tasks, update planned time, update task notes, update task due date, update task text, update task stream assignment
 - Stream operations: get streams/channels for the user's group
+- Calendar operations: get available calendars, create calendar events with calendar selection
 
 Authentication:
 - Stdio transport: Uses SUNSAMA_EMAIL and SUNSAMA_PASSWORD from environment
