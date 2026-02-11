@@ -21,6 +21,14 @@ build/
 *.swo
 *~
 
+# Devenv (Nix)
+.devenv.flake.nix
+.devenv/
+
+# Ad-hoc test/dev scripts
+test-*.js
+run-mcp.sh
+
 # OS files
 .DS_Store
 .DS_Store?
