@@ -123,27 +123,15 @@ export const CALENDAR_QUERIES = {
    */
   GET_CALENDARS: `
     query getCalendars {
-      user {
+      currentUser {
         _id
-        groupId
-        services {
-          google {
-            calendars {
-              items {
-                ...CalendarItem
-              }
-              __typename
-            }
-            __typename
-          }
-          microsoft {
-            calendars {
-              items {
-                ...CalendarItem
-              }
-              __typename
-            }
-            __typename
+        primaryGroup {
+          groupId
+          __typename
+        }
+        calendar {
+          items {
+            ...CalendarItem
           }
           __typename
         }

@@ -42,42 +42,32 @@ export const getCalendarsTool = withTransportClient({
       CALENDAR_QUERIES.GET_CALENDARS,
     );
 
-    if (!data?.user?.services) {
+    if (!data?.currentUser?.calendar?.items) {
       throw new Error("No calendar data received");
     }
 
-    // Extract calendars from all services
+    // Extract calendars from unified calendar.items array
     const calendars: any[] = [];
 
-    // Google calendars
-    if (data.user.services.google?.calendars?.items) {
-      for (const item of data.user.services.google.calendars.items) {
-        if (item.google) {
-          calendars.push({
-            calendarId: item.id,
-            displayName: item.google.summaryOverride || item.google.summary,
-            service: "google",
-            selected: item.google.selected,
-            accessRole: item.google.accessRole,
-            timeZone: item.google.timeZone,
-          });
-        }
-      }
-    }
-
-    // Microsoft calendars
-    if (data.user.services.microsoft?.calendars?.items) {
-      for (const item of data.user.services.microsoft.calendars.items) {
-        if (item.microsoft) {
-          calendars.push({
-            calendarId: item.microsoft.id,
-            displayName: item.microsoft.name,
-            service: "microsoft",
-            isDefault: item.microsoft.isDefaultCalendar,
-            canEdit: item.microsoft.canEdit,
-            color: item.microsoft.hexColor || item.microsoft.color,
-          });
-        }
+    for (const item of data.currentUser.calendar.items) {
+      if (item.google) {
+        calendars.push({
+          calendarId: item.id,
+          displayName: item.google.summaryOverride || item.google.summary,
+          service: "google",
+          selected: item.google.selected,
+          accessRole: item.google.accessRole,
+          timeZone: item.google.timeZone,
+        });
+      } else if (item.microsoft) {
+        calendars.push({
+          calendarId: item.microsoft.id,
+          displayName: item.microsoft.name,
+          service: "microsoft",
+          isDefault: item.microsoft.isDefaultCalendar,
+          canEdit: item.microsoft.canEdit,
+          color: item.microsoft.hexColor || item.microsoft.color,
+        });
       }
     }
 
@@ -119,24 +109,14 @@ export const createCalendarEventTool = withTransportClient({
 
       // Find matching calendar
       let found = false;
-      if (calendarData?.user?.services?.google?.calendars?.items) {
-        for (const item of calendarData.user.services.google.calendars.items) {
+      if (calendarData?.currentUser?.calendar?.items) {
+        for (const item of calendarData.currentUser.calendar.items) {
           if (item.id === calendarId && item.google) {
             resolvedCalendarDisplayName = item.google.summaryOverride ||
               item.google.summary;
             found = true;
             break;
-          }
-        }
-      }
-
-      if (
-        !found && calendarData?.user?.services?.microsoft?.calendars?.items
-      ) {
-        for (
-          const item of calendarData.user.services.microsoft.calendars.items
-        ) {
-          if (item.microsoft?.id === calendarId) {
+          } else if (item.microsoft?.id === calendarId) {
             resolvedCalendarDisplayName = item.microsoft.name;
             found = true;
             break;
