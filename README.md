@@ -71,7 +71,7 @@ npx mcp-sunsama
 #### Standard Setup
 1. Clone the repository:
 ```bash
-git clone https://github.com/robertn702/mcp-sunsama.git
+git clone https://github.com/jacopone/mcp-sunsama.git
 cd mcp-sunsama
 ```
 
@@ -91,7 +91,7 @@ For NixOS users, we provide a declarative development environment:
 
 1. Clone and enter the directory:
 ```bash
-git clone https://github.com/robertn702/mcp-sunsama.git
+git clone https://github.com/jacopone/mcp-sunsama.git
 cd mcp-sunsama
 ```
 
@@ -425,4 +425,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - [sunsama-api Library](https://github.com/robertn702/sunsama-api) - The underlying API client
 - [Model Context Protocol Documentation](https://modelcontextprotocol.io)
-- [Issue Tracker](https://github.com/robertn702/mcp-sunsama/issues)
+- [Issue Tracker](https://github.com/jacopone/mcp-sunsama/issues)
